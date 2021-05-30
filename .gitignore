@@ -1,0 +1,3 @@
+*.o
+embedded_cli_test
+examples/posix_demo
