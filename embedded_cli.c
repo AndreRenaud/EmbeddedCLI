@@ -1,5 +1,5 @@
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "embedded_cli.h"
 
@@ -17,7 +17,8 @@ static void cli_putchar(struct embedded_cli *cli, char ch)
         cli->putchar(cli->cb_data, ch);
 }
 
-void embedded_cli_init(struct embedded_cli *cli, char *prompt, void (*putchar)(void *data, char ch), void *cb_data)
+void embedded_cli_init(struct embedded_cli *cli, char *prompt,
+                       void (*putchar)(void *data, char ch), void *cb_data)
 {
     memset(cli, 0, sizeof(*cli));
     cli->putchar = putchar;
@@ -28,33 +29,111 @@ void embedded_cli_init(struct embedded_cli *cli, char *prompt, void (*putchar)(v
     }
 }
 
+static void term_cursor_back(struct embedded_cli *cli, int n)
+{
+    char buffer[10];
+    while (n > 0) {
+        int count = n % 10;
+        buffer[0] = '\x1b';
+        buffer[1] = '[';
+        buffer[2] = '0' + count;
+        buffer[3] = 'D';
+        buffer[4] = '\0';
+        cli_puts(cli, buffer);
+        n -= count;
+    }
+}
+
+static void embedded_cli_insert_default_char(struct embedded_cli *cli,
+                                             char ch)
+{
+    // Insert a gap in the buffer for the new character
+    memmove(&cli->buffer[cli->cursor + 1], &cli->buffer[cli->cursor],
+            cli->len - cli->cursor);
+    cli->buffer[cli->cursor] = ch;
+    cli->len++;
+    cli->buffer[cli->len] = '\0';
+
+    cli_puts(cli, &cli->buffer[cli->cursor]);
+    cli->cursor++;
+    term_cursor_back(cli, cli->len - cli->cursor);
+}
+
+static void embedded_cli_reset_line(struct embedded_cli *cli)
+{
+    cli->len = 0;
+    cli->cursor = 0;
+    cli->counter = 0;
+    cli->have_csi = cli->have_escape = false;
+}
+
 bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 {
-    //printf("Inserting char %d 0x%x\n", ch, ch);
+    // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
     if (cli->len < sizeof(cli->buffer) - 1) {
-        switch (ch) {
+        if (cli->have_csi) {
+            if (ch >= '0' && ch <= '9')
+                cli->counter = cli->counter * 10 + ch - '0';
+            else {
+                switch (ch) {
+                case 'D':
+                    if (cli->cursor > 0) {
+                        cli->cursor--;
+                        cli_puts(cli, "\x1b[1D");
+                    }
+                    cli->have_csi = cli->have_escape = false;
+                    break;
+                case 'C':
+                    if (cli->cursor < cli->len) {
+                        cli->cursor++;
+                        cli_puts(cli, "\x1b[1C");
+                    }
+                    cli->have_csi = cli->have_escape = false;
+                    break;
+                default:
+                    // TODO: Handle more escape sequences
+                    cli->have_csi = cli->have_escape = false;
+                    break;
+                }
+            }
+        } else {
+            switch (ch) {
             case '\b': // Backspace
             case 0x7f: // backspace?
-                if (cli->len > 0) {
+                if (cli->cursor > 0) {
+                    memmove(&cli->buffer[cli->cursor],
+                            &cli->buffer[cli->cursor + 1],
+                            cli->len - cli->cursor);
+                    cli->cursor--;
                     cli->len--;
-                    cli->buffer[cli->len] = '\0';
                 }
                 cli_puts(cli, "\x1b[1D \x1b[1D");
                 break;
+            case '\x1b':
+                cli->have_csi = false;
+                cli->have_escape = true;
+                cli->counter = 0;
+                break;
+            case '[':
+                if (cli->have_escape)
+                    cli->have_csi = true;
+                break;
+            case '\n':
+                if (cli->done)
+                    cli->buffer[0] = '\0';
+                break;
             default:
-                cli_putchar(cli, ch);
-                cli->buffer[cli->len] = ch;
-                cli->len++;
+                embedded_cli_insert_default_char(cli, ch);
+            }
         }
-        cli->buffer[cli->len] = '\0';
     }
     cli->done = (ch == '\n');
     if (cli->done)
-        cli->len = 0;
+        embedded_cli_reset_line(cli);
     return cli->done;
 }
 
-char *embedded_cli_get_line(struct embedded_cli *cli)
+const char *embedded_cli_get_line(const struct embedded_cli *cli)
 {
     if (!cli->done)
         return NULL;

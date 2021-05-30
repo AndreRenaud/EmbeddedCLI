@@ -25,47 +25,56 @@
 #define EMBEDDED_CLI_MAX_PROMPT_LEN 10
 
 struct embedded_cli {
-	/**
-	 * Internal buffer. This should not be accessed directly, use the
-	 * access functions below
-	 */
-	char buffer[EMBEDDED_CLI_MAX_LINE];
+    /**
+     * Internal buffer. This should not be accessed directly, use the
+     * access functions below
+     */
+    char buffer[EMBEDDED_CLI_MAX_LINE];
 
-	/**
-	 * Number of characters in buffer at the moment
-	 */
-	int len;
+    /**
+     * Number of characters in buffer at the moment
+     */
+    int len;
 
-	/**
-	 * Position of the cursor
-	 */
-	//int cursor;
+    /**
+     * Position of the cursor
+     */
+    int cursor;
 
-	/**
-	 * Have we just parsed a full line?
-	 */
-	bool done;
+    /**
+     * Have we just parsed a full line?
+     */
+    bool done;
 
-	/**
-	 * Callback function to output a single character to the user
-	 */
-	void (*putchar)(void *data, char ch);
+    /**
+     * Callback function to output a single character to the user
+     */
+    void (*putchar)(void *data, char ch);
 
-	/**
-	 * Data to provide to the putchar callback
-	 */
-	void *cb_data;
+    /**
+     * Data to provide to the putchar callback
+     */
+    void *cb_data;
 
-	char *argv[EMBEDDED_CLI_MAX_ARGC];
-	int argc;
+    bool have_escape;
+    bool have_csi;
 
-	char prompt[EMBEDDED_CLI_MAX_PROMPT_LEN];
+    /**
+     * counter of the value for the CSI code
+     */
+    int counter;
+
+    char *argv[EMBEDDED_CLI_MAX_ARGC];
+    int argc;
+
+    char prompt[EMBEDDED_CLI_MAX_PROMPT_LEN];
 };
 
 /**
  * Start up the Embedded CLI subsystem. This should only be called once.
  */
-void embedded_cli_init(struct embedded_cli *, char *prompt, void (*putchar)(void *data, char ch), void *cb_data);
+void embedded_cli_init(struct embedded_cli *, char *prompt,
+                       void (*putchar)(void *data, char ch), void *cb_data);
 
 /**
  * Adds a new character into the buffer. Returns true if
@@ -77,7 +86,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch);
  * Returns the nul terminated internal buffer. This will
  * return NULL if the buffer is not yet complete
  */
-char *embedded_cli_get_line(struct embedded_cli *cli);
+const char *embedded_cli_get_line(const struct embedded_cli *cli);
 
 /**
  * Parses the internal buffer and returns it as an argc/argc combo
@@ -87,8 +96,8 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv);
 
 /**
  * Outputs the CLI prompt
- * This should be called after @ref embedded_cli_argc or @ref embedded_cli_get_line
- * has been called and the command fully processed
+ * This should be called after @ref embedded_cli_argc or @ref
+ * embedded_cli_get_line has been called and the command fully processed
  */
 void embedded_cli_prompt(struct embedded_cli *cli);
 
