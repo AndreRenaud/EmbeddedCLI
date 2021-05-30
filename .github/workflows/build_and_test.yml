@@ -9,5 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build & Test
-        run: |
-          make test
+        run: make test
+      - name: Fuzz
+        run: make fuzz
