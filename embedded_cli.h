@@ -24,6 +24,13 @@
  */
 #define EMBEDDED_CLI_MAX_PROMPT_LEN 10
 
+/**
+ * This is the structure which defines the current state of the CLI
+ * NOTE: Although this structure is exposed here, it is not recommended
+ * that it be interacted with directly. Use the accessor functions below to
+ * interact with it. It is exposed here to make it easier to use as a static
+ * structure, but all elements of the structure should be considered private
+ */
 struct embedded_cli {
     /**
      * Internal buffer. This should not be accessed directly, use the
