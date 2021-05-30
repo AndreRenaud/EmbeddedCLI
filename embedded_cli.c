@@ -33,11 +33,26 @@ static void term_cursor_back(struct embedded_cli *cli, int n)
 {
     char buffer[10];
     while (n > 0) {
-        int count = n % 10;
+        int count = n > 9 ? 9 : n;
         buffer[0] = '\x1b';
         buffer[1] = '[';
         buffer[2] = '0' + count;
         buffer[3] = 'D';
+        buffer[4] = '\0';
+        cli_puts(cli, buffer);
+        n -= count;
+    }
+}
+
+static void term_cursor_fwd(struct embedded_cli *cli, int n)
+{
+    char buffer[10];
+    while (n > 0) {
+        int count = n > 9 ? 9 : n;
+        buffer[0] = '\x1b';
+        buffer[1] = '[';
+        buffer[2] = '0' + count;
+        buffer[3] = 'C';
         buffer[4] = '\0';
         cli_puts(cli, buffer);
         n -= count;
@@ -69,26 +84,31 @@ static void embedded_cli_reset_line(struct embedded_cli *cli)
 
 bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 {
-    // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
+    //printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
     if (cli->len < sizeof(cli->buffer) - 1) {
         if (cli->have_csi) {
-            if (ch >= '0' && ch <= '9')
+            if (ch >= '0' && ch <= '9' && cli->counter < 100) {
                 cli->counter = cli->counter * 10 + ch - '0';
+                //printf("cli->counter -> %d\n", cli->counter);
+            }
             else {
                 switch (ch) {
                 case 'D':
-                    if (cli->cursor > 0) {
-                        cli->cursor--;
-                        cli_puts(cli, "\x1b[1D");
+                    //printf("back %d vs %d\n", cli->cursor, cli->counter);
+                    if (cli->cursor >= cli->counter) {
+                        cli->cursor -= cli->counter;
+                        term_cursor_back(cli, cli->counter);
                     }
                     cli->have_csi = cli->have_escape = false;
+                    cli->counter = 0;
                     break;
                 case 'C':
-                    if (cli->cursor < cli->len) {
-                        cli->cursor++;
-                        cli_puts(cli, "\x1b[1C");
+                    if (cli->cursor <= cli->len - cli->counter) {
+                        cli->cursor+=cli->counter;
+                        term_cursor_fwd(cli, cli->counter);
                     }
                     cli->have_csi = cli->have_escape = false;
+                    cli->counter = 0;
                     break;
                 default:
                     // TODO: Handle more escape sequences
@@ -98,6 +118,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             }
         } else {
             switch (ch) {
+            case '\0':
+                break;
             case '\b': // Backspace
             case 0x7f: // backspace?
                 if (cli->cursor > 0) {
@@ -123,13 +145,15 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli->buffer[0] = '\0';
                 break;
             default:
-                embedded_cli_insert_default_char(cli, ch);
+                if (ch > 0)
+                    embedded_cli_insert_default_char(cli, ch);
             }
         }
     }
     cli->done = (ch == '\n');
     if (cli->done)
         embedded_cli_reset_line(cli);
+    //printf("Done with char 0x%x (done=%d)\n", ch, cli->done);
     return cli->done;
 }
 

@@ -19,7 +19,7 @@ embedded_cli_test: embedded_cli.o embedded_cli_test.o
 	$(CC) -o $@ $^
 
 embedded_cli_fuzzer: embedded_cli.c embedded_cli_fuzzer.c
-	$(CLANG) -I. -g -o $@ $^ -fsanitize=fuzzer,address
+	$(CLANG) -I. -g -o $@ embedded_cli_fuzzer.c -fsanitize=fuzzer,address
 
 %.o: %.c
 	#cppcheck --quiet --std=c99 --enable=all -I. $<
