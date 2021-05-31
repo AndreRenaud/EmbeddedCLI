@@ -15,11 +15,11 @@ fuzz: embedded_cli_fuzzer
 examples/posix_demo: embedded_cli.o examples/posix_demo.o
 	$(CC) -o $@ $^
 
-embedded_cli_test: embedded_cli.o embedded_cli_test.o
+embedded_cli_test: embedded_cli.o tests/embedded_cli_test.o
 	$(CC) -o $@ $^
 
-embedded_cli_fuzzer: embedded_cli.c embedded_cli_fuzzer.c
-	$(CLANG) -I. -g -o $@ embedded_cli_fuzzer.c -fsanitize=fuzzer,address
+embedded_cli_fuzzer: embedded_cli.c tests/embedded_cli_fuzzer.c
+	$(CLANG) -I. -g -o $@ tests/embedded_cli_fuzzer.c -fsanitize=fuzzer,address
 
 %.o: %.c
 	#cppcheck --quiet --std=c99 --enable=all -I. $<
