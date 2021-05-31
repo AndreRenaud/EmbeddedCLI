@@ -141,9 +141,10 @@ static void callback(void *data, char ch)
     char *d = (char *)data;
     if (d) {
         int len = strlen(d);
-        if (len < MAX_OUTPUT_LEN - 1)
+        if (len < MAX_OUTPUT_LEN - 1) {
             d[len] = ch;
-        d[len + 1] = '\0';
+            d[len + 1] = '\0';
+        }
     }
 }
 
