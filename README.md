@@ -23,12 +23,13 @@ Embedded CLI makes very few assumptions about the platform. Data input/output is
 Examples are provided for a posix simulator, STM32
 
 No 3rd party libraries are assumed beyond the following standard C library functions:
+* memcpy
+* memmove
 * memset
-* strncpy
 * strcmp
 * strlen
-* memmove
-* memcpy
+* strncpy
+* strstr
 
 All code is C99 compliant.
 

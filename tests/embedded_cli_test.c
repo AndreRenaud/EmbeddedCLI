@@ -8,7 +8,7 @@
 #define DOWN CSI "1B"
 #define RIGHT CSI "1C"
 #define LEFT CSI "1D"
-#define CTRL_R "\x11"
+#define CTRL_R "\x12"
 
 static void cli_equals(const struct embedded_cli *cli, const char *line)
 {
@@ -103,6 +103,17 @@ static void test_history_keys(void)
     cli_equals(&cli, "Second");
 }
 
+static void test_search(void)
+{
+    struct embedded_cli cli;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "First\n");
+    test_insert_line(&cli, "Second\n");
+    test_insert_line(&cli, "Third\n");
+    test_insert_line(&cli, CTRL_R "Se\n");
+    cli_equals(&cli, "Second");
+}
+
 /**
  * The above tests are all quite specific. This test is where we can put any
  * other random ideas/corner cases
@@ -161,6 +172,7 @@ TEST_LIST = {
     {"cursor_right", test_cursor_right},
     {"history", test_history},
     {"history_keys", test_history_keys},
+    {"search", test_search},
     {"multiple", test_multiple},
     {"echo", test_echo},
     {NULL, NULL},
