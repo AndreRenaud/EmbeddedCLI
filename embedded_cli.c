@@ -1,3 +1,9 @@
+/**
+ * Useful links:
+ *    http://www.asciitable.com
+ *    https://en.wikipedia.org/wiki/ANSI_escape_code
+ */
+
 #include <stdio.h>
 #include <string.h>
 
