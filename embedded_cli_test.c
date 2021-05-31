@@ -4,8 +4,11 @@
 // Some ANSI escape sequences
 
 #define CSI "\x1b["
-#define LEFT_ARROW CSI "1D"
+#define UP_ARROW CSI "1A"
+#define DOWN_ARROW CSI "1B"
 #define RIGHT_ARROW CSI "1C"
+#define LEFT_ARROW CSI "1D"
+#define CTRL_R "\x11"
 
 static void cli_equals(const struct embedded_cli *cli, const char *line)
 {
@@ -73,11 +76,44 @@ static void test_cursor_right(void)
     cli_equals(&cli, "ACB");
 }
 
+static void test_history(void)
+{
+    struct embedded_cli cli;
+    char *line;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "First\n");
+    test_insert_line(&cli, "Second\n");
+    test_insert_line(&cli, "Third\n");
+    line = embedded_cli_get_history(&cli, 0);
+    TEST_ASSERT(line && strcmp(line, "Third") == 0);
+    line = embedded_cli_get_history(&cli, 1);
+    TEST_ASSERT(line && strcmp(line, "Second") == 0);
+    line = embedded_cli_get_history(&cli, 2);
+    TEST_ASSERT(line && strcmp(line, "First") == 0);
+}
+
+static void test_history_keys(void)
+{
+    struct embedded_cli cli;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    /**
+     * Insert three commands, then make sure we can search back for them
+     * using Ctrl-R
+     */
+    test_insert_line(&cli, "First\n");
+    test_insert_line(&cli, "Second\n");
+    test_insert_line(&cli, "Third\n");
+    test_insert_line(&cli, UP_ARROW UP_ARROW UP_ARROW DOWN_ARROW "\n");
+    cli_equals(&cli, "Second");
+}
+
 TEST_LIST = {
     {"simple", test_simple},
     {"argc", test_argc},
     {"delete", test_delete},
     {"cursor_left", test_cursor_left},
     {"cursor_right", test_cursor_right},
+    {"history", test_history},
+    {"history_keys", test_history_keys},
     {NULL, NULL},
 };
