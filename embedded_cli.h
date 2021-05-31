@@ -96,6 +96,7 @@ void embedded_cli_init(struct embedded_cli *, char *prompt,
 /**
  * Adds a new character into the buffer. Returns true if
  * the buffer should now be processed
+ * Note: This function should not be called from an interrupt handler.
  */
 bool embedded_cli_insert_char(struct embedded_cli *cli, char ch);
 

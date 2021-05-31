@@ -1,8 +1,8 @@
-CFLAGS=-g -Wall -pipe -I.
+CFLAGS=-g -Wall -Wextra -Werror -pipe -I. -std=c99
 CLANG_FORMAT=clang-format
 CLANG?=clang
 
-SOURCES=embedded_cli.c embedded_cli.h embedded_cli_test.c examples/posix_demo.c
+SOURCES=embedded_cli.c embedded_cli.h tests/embedded_cli_test.c examples/posix_demo.c tests/embedded_cli_fuzzer.c
 
 default: examples/posix_demo embedded_cli_test
 
@@ -19,10 +19,10 @@ embedded_cli_test: embedded_cli.o tests/embedded_cli_test.o
 	$(CC) -o $@ $^
 
 embedded_cli_fuzzer: embedded_cli.c tests/embedded_cli_fuzzer.c
-	$(CLANG) -I. -g -o $@ tests/embedded_cli_fuzzer.c -fsanitize=fuzzer,address
+	$(CLANG) -Itests -I. -g -o $@ tests/embedded_cli_fuzzer.c -fsanitize=fuzzer,address
 
 %.o: %.c
-	#cppcheck --quiet --std=c99 --enable=all -I. $<
+	# cppcheck --quiet --std=c99 --enable=warning,style,performance,portability,information  -I. -DTEST_FINI= $<
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 format:

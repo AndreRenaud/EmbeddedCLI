@@ -1,3 +1,7 @@
+/**
+ * Example of using EmbeddedCLI in a posix tty environment.
+ * This is useful as a local test for new functionality
+ */
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +12,10 @@
 
 #include "embedded_cli.h"
 
+/**
+ * This function retrieves exactly one character from stdin,
+ * in character-by-character mode (as opposed to reading a full line)
+ */
 static char getch(void)
 {
     char buf = 0;
@@ -29,6 +37,10 @@ static char getch(void)
     return (buf);
 }
 
+/**
+ * This function outputs a single character to stdout, to be used as the
+ * callback from embedded cli
+ */
 static void posix_putch(void *data, char ch)
 {
     FILE *fp = data;
@@ -36,17 +48,24 @@ static void posix_putch(void *data, char ch)
     fflush(fp);
 }
 
-int main(int argc, char **argv)
+int main(void)
 {
     bool done = false;
     struct embedded_cli cli;
 
+    /**
+     * Start up the Embedded CLI instance with the appropriate
+     * callbacks/userdata
+     */
     embedded_cli_init(&cli, "POSIX> ", posix_putch, stdout);
     embedded_cli_prompt(&cli);
 
     while (!done) {
         char ch = getch();
 
+        /**
+         * If we have entered a command, try and process it
+         */
         if (embedded_cli_insert_char(&cli, ch)) {
             int cli_argc;
             char **cli_argv;

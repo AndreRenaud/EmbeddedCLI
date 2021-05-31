@@ -11,6 +11,8 @@
 
 #define CTRL_R "\x11"
 
+#define CLEAR_EOL "\x1b[0K"
+
 static void cli_puts(struct embedded_cli *cli, const char *s)
 {
     if (!cli->putchar)
@@ -48,32 +50,26 @@ void embedded_cli_init(struct embedded_cli *cli, char *prompt,
     embedded_cli_reset_line(cli);
 }
 
+static void cli_ansi(struct embedded_cli *cli, int n, char code)
+{
+    char buffer[5] = {'\x1b', '[', '0' + (n % 10), code, '\0'};
+    cli_puts(cli, buffer);
+}
+
 static void term_cursor_back(struct embedded_cli *cli, int n)
 {
-    char buffer[10];
     while (n > 0) {
         int count = n > 9 ? 9 : n;
-        buffer[0] = '\x1b';
-        buffer[1] = '[';
-        buffer[2] = '0' + count;
-        buffer[3] = 'D';
-        buffer[4] = '\0';
-        cli_puts(cli, buffer);
+        cli_ansi(cli, count, 'D');
         n -= count;
     }
 }
 
 static void term_cursor_fwd(struct embedded_cli *cli, int n)
 {
-    char buffer[10];
     while (n > 0) {
         int count = n > 9 ? 9 : n;
-        buffer[0] = '\x1b';
-        buffer[1] = '[';
-        buffer[2] = '0' + count;
-        buffer[3] = 'C';
-        buffer[4] = '\0';
-        cli_puts(cli, buffer);
+        cli_ansi(cli, count, 'C');
         n -= count;
     }
 }
@@ -145,7 +141,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->done = false;
     }
     // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
-    if (cli->len < sizeof(cli->buffer) - 1) {
+    if (cli->len < (int)sizeof(cli->buffer) - 1) {
         if (cli->have_csi) {
             if (ch >= '0' && ch <= '9' && cli->counter < 100) {
                 cli->counter = cli->counter * 10 + ch - '0';
@@ -167,6 +163,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                         cli->len = len;
                         cli->cursor = len;
                         cli_puts(cli, cli->buffer);
+                        cli_puts(cli, CLEAR_EOL);
                     } else {
                         embedded_cli_reset_line(cli);
                     }
@@ -187,6 +184,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                         cli->len = len;
                         cli->cursor = len;
                         cli_puts(cli, cli->buffer);
+                        cli_puts(cli, CLEAR_EOL);
                     } else {
                         embedded_cli_reset_line(cli);
                     }
@@ -195,12 +193,16 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 
                 case 'D':
                     // printf("back %d vs %d\n", cli->cursor, cli->counter);
+                    if (cli->counter == 0)
+                        cli->counter = 1;
                     if (cli->cursor >= cli->counter) {
                         cli->cursor -= cli->counter;
                         term_cursor_back(cli, cli->counter);
                     }
                     break;
                 case 'C':
+                    if (cli->counter == 0)
+                        cli->counter = 1;
                     if (cli->cursor <= cli->len - cli->counter) {
                         cli->cursor += cli->counter;
                         term_cursor_fwd(cli, cli->counter);
@@ -219,14 +221,15 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 break;
             case '\b': // Backspace
             case 0x7f: // backspace?
+                // printf("backspace %d\n", cli->cursor);
                 if (cli->cursor > 0) {
-                    memmove(&cli->buffer[cli->cursor],
-                            &cli->buffer[cli->cursor + 1],
-                            cli->len - cli->cursor);
+                    memmove(&cli->buffer[cli->cursor - 1],
+                            &cli->buffer[cli->cursor],
+                            cli->len - cli->cursor + 1);
                     cli->cursor--;
                     cli->len--;
+                    cli_puts(cli, "\x1b[1D \x1b[1D");
                 }
-                cli_puts(cli, "\x1b[1D \x1b[1D");
                 break;
             case '\x1b':
                 cli->have_csi = false;
@@ -274,7 +277,8 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
     bool in_arg = false;
     if (!cli->done)
         return 0;
-    for (int i = 0; i < sizeof(cli->buffer) && cli->buffer[i] != '\0'; i++) {
+    for (size_t i = 0; i < sizeof(cli->buffer) && cli->buffer[i] != '\0';
+         i++) {
         // Skip over whitespace, and replace it with nul terminators so
         // each argv is nul terminated
         if (is_whitespace(cli->buffer[i])) {
