@@ -39,6 +39,11 @@ struct embedded_cli {
     char buffer[EMBEDDED_CLI_MAX_LINE];
 
     /**
+     * List of history entries
+     */
+    char history[EMBEDDED_CLI_HISTORY_LEN];
+
+    /**
      * Number of characters in buffer at the moment
      */
     int len;
@@ -70,6 +75,11 @@ struct embedded_cli {
      * counter of the value for the CSI code
      */
     int counter;
+
+    /**
+     * How far back in the history are we?
+     */
+    int history_pos;
 
     char *argv[EMBEDDED_CLI_MAX_ARGC];
     int argc;
@@ -107,5 +117,13 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv);
  * embedded_cli_get_line has been called and the command fully processed
  */
 void embedded_cli_prompt(struct embedded_cli *cli);
+
+/**
+ * Retrieve a history command line
+ * @param history_pos 0 is the most recent command, 1 is the one before that
+ * etc...
+ * @return NULL if the history buffer is exceeded
+ */
+char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos);
 
 #endif
