@@ -12,3 +12,7 @@ jobs:
         run: make test
       - name: Fuzz
         run: make fuzz
+      - name: Valgrind
+        run: |
+          apt-get install valgrind
+          valgrind --leak-check=full --error-exitcode=1 ./embedded_cli_test
