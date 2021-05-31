@@ -29,7 +29,7 @@ format:
 	$(CLANG_FORMAT) -i $(SOURCES)
 
 clean:
-	rm -f *.o */*.o embedded_cli_test embedded_cli_fuzzer
+	rm -f *.o */*.o embedded_cli_test embedded_cli_fuzzer examples/posix_demo
 	rm -f timeout-* crash-*
 
 .PHONY: clean format test default fuzz
