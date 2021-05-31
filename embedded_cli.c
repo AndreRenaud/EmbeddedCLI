@@ -228,7 +228,10 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                             cli->len - cli->cursor + 1);
                     cli->cursor--;
                     cli->len--;
-                    cli_puts(cli, "\x1b[1D \x1b[1D");
+                    term_cursor_back(cli, 1);
+                    cli_puts(cli, &cli->buffer[cli->cursor]);
+                    cli_puts(cli, " ");
+                    term_cursor_back(cli, cli->len - cli->cursor + 1);
                 }
                 break;
             case '\x1b':

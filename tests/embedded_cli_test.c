@@ -96,10 +96,6 @@ static void test_history_keys(void)
 {
     struct embedded_cli cli;
     embedded_cli_init(&cli, NULL, NULL, NULL);
-    /**
-     * Insert three commands, then make sure we can search back for them
-     * using Ctrl-R
-     */
     test_insert_line(&cli, "First\n");
     test_insert_line(&cli, "Second\n");
     test_insert_line(&cli, "Third\n");
