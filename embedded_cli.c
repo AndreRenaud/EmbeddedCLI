@@ -9,9 +9,10 @@
 
 #include "embedded_cli.h"
 
-#define CTRL_R "\x11"
+#define CTRL_R 0x12
 
 #define CLEAR_EOL "\x1b[0K"
+#define MOVE_BOL "\x1b[1G"
 
 static void cli_puts(struct embedded_cli *cli, const char *s)
 {
@@ -33,7 +34,7 @@ static void embedded_cli_reset_line(struct embedded_cli *cli)
     cli->cursor = 0;
     cli->counter = 0;
     cli->history_pos = -1;
-    cli->have_csi = cli->have_escape = false;
+    cli->searching = cli->have_csi = cli->have_escape = false;
 }
 
 void embedded_cli_init(struct embedded_cli *cli, char *prompt,
@@ -81,6 +82,18 @@ static void term_backspace(struct embedded_cli *cli, int n)
         cli_putchar(cli, '\b');
 }
 
+static char *embedded_cli_get_history_search(struct embedded_cli *cli)
+{
+    for (int i = 0;; i++) {
+        char *h = embedded_cli_get_history(cli, i);
+        if (!h)
+            return NULL;
+        if (strstr(h, cli->buffer))
+            return h;
+    }
+    return NULL;
+}
+
 static void embedded_cli_insert_default_char(struct embedded_cli *cli,
                                              char ch)
 {
@@ -90,10 +103,18 @@ static void embedded_cli_insert_default_char(struct embedded_cli *cli,
     cli->buffer[cli->cursor] = ch;
     cli->len++;
     cli->buffer[cli->len] = '\0';
-
-    cli_puts(cli, &cli->buffer[cli->cursor]);
     cli->cursor++;
-    term_cursor_back(cli, cli->len - cli->cursor);
+
+    if (cli->searching) {
+        cli_puts(cli, MOVE_BOL CLEAR_EOL "search:");
+        char *h = embedded_cli_get_history_search(cli);
+        if (h)
+            cli_puts(cli, h);
+
+    } else {
+        cli_puts(cli, &cli->buffer[cli->cursor - 1]);
+        term_cursor_back(cli, cli->len - cli->cursor);
+    }
 }
 
 char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos)
@@ -132,6 +153,22 @@ static void embedded_cli_extend_history(struct embedded_cli *cli)
     }
 }
 
+static void embedded_cli_stop_search(struct embedded_cli *cli, bool print)
+{
+    char *h = embedded_cli_get_history_search(cli);
+    if (h)
+        strcpy(cli->buffer, h);
+    else
+        cli->buffer[0] = '\0';
+    cli->len = cli->cursor = strlen(cli->buffer);
+    cli->searching = false;
+    if (print) {
+        cli_puts(cli, MOVE_BOL CLEAR_EOL);
+        cli_puts(cli, cli->prompt);
+        cli_puts(cli, cli->buffer);
+    }
+}
+
 bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 {
     // If we're inserting a character just after a finished line, clear things
@@ -140,7 +177,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->buffer[0] = '\0';
         cli->done = false;
     }
-    // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
+    // printf("Inserting char %d 0x%x '%c' searching: %d\n", ch, ch, ch,
+    // cli->searching);
     if (cli->len < (int)sizeof(cli->buffer) - 1) {
         if (cli->have_csi) {
             if (ch >= '0' && ch <= '9' && cli->counter < 100) {
@@ -222,6 +260,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             case '\b': // Backspace
             case 0x7f: // backspace?
                 // printf("backspace %d\n", cli->cursor);
+                if (cli->searching)
+                    embedded_cli_stop_search(cli, true);
                 if (cli->cursor > 0) {
                     memmove(&cli->buffer[cli->cursor - 1],
                             &cli->buffer[cli->cursor],
@@ -234,7 +274,15 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     term_cursor_back(cli, cli->len - cli->cursor + 1);
                 }
                 break;
+            case CTRL_R:
+                if (!cli->searching) {
+                    cli_puts(cli, "\nsearch:");
+                    cli->searching = true;
+                }
+                break;
             case '\x1b':
+                if (cli->searching)
+                    embedded_cli_stop_search(cli, true);
                 cli->have_csi = false;
                 cli->have_escape = true;
                 cli->counter = 0;
@@ -242,6 +290,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             case '[':
                 if (cli->have_escape)
                     cli->have_csi = true;
+                else
+                    embedded_cli_insert_default_char(cli, ch);
                 break;
             case '\n':
                 cli_putchar(cli, '\n');
@@ -255,6 +305,9 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
     cli->done = (ch == '\n');
 
     if (cli->done) {
+        if (cli->searching) {
+            embedded_cli_stop_search(cli, false);
+        }
         embedded_cli_extend_history(cli);
         embedded_cli_reset_line(cli);
     }

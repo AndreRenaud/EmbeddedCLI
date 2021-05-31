@@ -59,6 +59,11 @@ struct embedded_cli {
     bool done;
 
     /**
+     * Are we searching through the history?
+     */
+    bool searching;
+
+    /**
      * Callback function to output a single character to the user
      */
     void (*putchar)(void *data, char ch);
