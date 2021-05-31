@@ -15,6 +15,8 @@ Embedded CLI is a library for providing usable command line interfaces for embed
  * Base structure has a fixed size, with compile time size limitations
 * Comprehensive test suite, including fuzz testing for memory safety
 
+Works well in conjunction with the [Simple Options](https://github.com/AndreRenaud/simple_options) library to provide quick & easy argument parsing in embedded environments. Using this combination makes it simple to create an extensible CLI interface, with easy argument parsing/usage/help support.
+
 ## Platform support & requirements
 Embedded CLI makes very few assumptions about the platform. Data input/output is abstracted in call backs.
 
