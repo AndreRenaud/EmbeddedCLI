@@ -134,6 +134,28 @@ static void test_multiple(void)
     }
 }
 
+#define MAX_OUTPUT_LEN 50
+
+static void callback(void *data, char ch)
+{
+    char *d = (char *)data;
+    if (d) {
+        int len = strlen(d);
+        if (len < MAX_OUTPUT_LEN - 1)
+            d[len] = ch;
+        d[len + 1] = '\0';
+    }
+}
+
+static void test_echo(void)
+{
+    struct embedded_cli cli;
+    char output[MAX_OUTPUT_LEN] = "\0";
+    embedded_cli_init(&cli, NULL, callback, output);
+    test_insert_line(&cli, "foo\n");
+    TEST_ASSERT(strcmp(output, "foo\n") == 0);
+}
+
 TEST_LIST = {
     {"simple", test_simple},
     {"argc", test_argc},
@@ -143,5 +165,6 @@ TEST_LIST = {
     {"history", test_history},
     {"history_keys", test_history_keys},
     {"multiple", test_multiple},
+    {"echo", test_echo},
     {NULL, NULL},
 };
