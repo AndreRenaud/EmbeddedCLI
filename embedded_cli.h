@@ -3,26 +3,35 @@
 
 #include <stdbool.h>
 
+#ifndef EMBEDDED_CLI_MAX_LINE
 /**
  * Maximum number of bytes to accept in a single line
  */
 #define EMBEDDED_CLI_MAX_LINE 120
+#endif
 
+#ifndef EMBEDDED_CLI_HISTORY_LEN
 /**
  * Maximum number of bytes to retain of history data
  * Define this to 0 to remove history support
  */
 #define EMBEDDED_CLI_HISTORY_LEN 1000
+#endif
 
+#ifndef EMBEDDED_CLI_MAX_ARGC
 /**
  * What is the maximum number of arguments we reserve space for
  */
 #define EMBEDDED_CLI_MAX_ARGC 16
+#endif
 
+
+#ifndef EMBEDDED_CLI_MAX_PROMPT_LEN
 /**
  * Maximum number of bytes in the prompt
  */
 #define EMBEDDED_CLI_MAX_PROMPT_LEN 10
+#endif
 
 /**
  * This is the structure which defines the current state of the CLI
