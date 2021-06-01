@@ -76,6 +76,7 @@ static void test_cursor_right(void)
     cli_equals(&cli, "ACB");
 }
 
+#if EMBEDDED_CLI_HISTORY_LEN
 static void test_history(void)
 {
     struct embedded_cli cli;
@@ -113,6 +114,7 @@ static void test_search(void)
     test_insert_line(&cli, CTRL_R "Se\n");
     cli_equals(&cli, "Second");
 }
+#endif
 
 /**
  * The above tests are all quite specific. This test is where we can put any
@@ -128,8 +130,10 @@ static void test_multiple(void)
         {"abc\b\b\b\b\b\b\b\b\n", ""},
         {"abc\b\b\b\bc\n", "c"},
         {LEFT LEFT RIGHT RIGHT "a" LEFT RIGHT "\n", "a"},
+#if EMBEDDED_CLI_HISTORY_LEN
         {UP UP "\n", "c"},
         {"foo" UP "\n", "c"},
+#endif
         {NULL, NULL},
     };
 
@@ -170,9 +174,11 @@ TEST_LIST = {
     {"delete", test_delete},
     {"cursor_left", test_cursor_left},
     {"cursor_right", test_cursor_right},
+#if EMBEDDED_CLI_HISTORY_LEN
     {"history", test_history},
     {"history_keys", test_history_keys},
     {"search", test_search},
+#endif
     {"multiple", test_multiple},
     {"echo", test_echo},
     {NULL, NULL},

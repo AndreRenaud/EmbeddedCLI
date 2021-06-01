@@ -34,7 +34,7 @@ No 3rd party libraries are assumed beyond the following standard C library funct
 All code is C99 compliant.
 
 ## Memory usage
-Memory usage is configurable by adjusting the internal buffering. In the default configuration, it will consume 1.5kB of RAM, most of which is in the history buffer. The easiest way to reduce memory consumption is to reduce/drop the support for the history buffer. When compiled in ARM Thumb2 mode, it consumes approximately 1kB of code space.
+Memory usage is configurable by adjusting the internal buffering. In the default configuration, it will consume 1.5kB of RAM, most of which is in the history buffer, and 1.5kB of code space (ARM Thumb2). The easiest way to reduce memory consumption is to drop the support for the history buffer. In this configuration it will consume ~200B of RAM, and ~800B of code space (ARM Thumb2).
 
 ## Thanks
 Icon `terminal` by Ashwin Dinesh from the Noun Project
