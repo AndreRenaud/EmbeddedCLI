@@ -80,7 +80,7 @@ static void test_cursor_right(void)
 static void test_history(void)
 {
     struct embedded_cli cli;
-    char *line;
+    const char *line;
     embedded_cli_init(&cli, NULL, NULL, NULL);
     test_insert_line(&cli, "First\n");
     test_insert_line(&cli, "Second\n");

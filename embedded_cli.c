@@ -86,10 +86,10 @@ static void term_backspace(struct embedded_cli *cli, int n)
         cli_putchar(cli, '\b');
 }
 
-static char *embedded_cli_get_history_search(struct embedded_cli *cli)
+static const char *embedded_cli_get_history_search(struct embedded_cli *cli)
 {
     for (int i = 0;; i++) {
-        char *h = embedded_cli_get_history(cli, i);
+        const char *h = embedded_cli_get_history(cli, i);
         if (!h)
             return NULL;
         if (strstr(h, cli->buffer))
@@ -113,7 +113,7 @@ static void embedded_cli_insert_default_char(struct embedded_cli *cli,
 #if EMBEDDED_CLI_HISTORY_LEN
     if (cli->searching) {
         cli_puts(cli, MOVE_BOL CLEAR_EOL "search:");
-        char *h = embedded_cli_get_history_search(cli);
+        const char *h = embedded_cli_get_history_search(cli);
         if (h)
             cli_puts(cli, h);
 
@@ -125,7 +125,7 @@ static void embedded_cli_insert_default_char(struct embedded_cli *cli,
     }
 }
 
-char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos)
+const char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos)
 {
 #if EMBEDDED_CLI_HISTORY_LEN
     int pos = 0;
@@ -170,7 +170,7 @@ static void embedded_cli_extend_history(struct embedded_cli *cli)
 
 static void embedded_cli_stop_search(struct embedded_cli *cli, bool print)
 {
-    char *h = embedded_cli_get_history_search(cli);
+    const char *h = embedded_cli_get_history_search(cli);
     if (h)
         strcpy(cli->buffer, h);
     else
@@ -206,7 +206,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 #if EMBEDDED_CLI_HISTORY_LEN
                     // Backspace over our current line
                     term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
-                    char *line =
+                    const char *line =
                         embedded_cli_get_history(cli, cli->history_pos + 1);
                     if (line) {
                         int len = strlen(line);
@@ -229,7 +229,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 case 'B': {
 #if EMBEDDED_CLI_HISTORY_LEN
                     term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
-                    char *line =
+                    const char *line =
                         embedded_cli_get_history(cli, cli->history_pos - 1);
                     if (line) {
                         int len = strlen(line);
