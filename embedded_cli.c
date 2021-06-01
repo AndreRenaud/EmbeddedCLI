@@ -33,8 +33,11 @@ static void embedded_cli_reset_line(struct embedded_cli *cli)
     cli->len = 0;
     cli->cursor = 0;
     cli->counter = 0;
+    cli->have_csi = cli->have_escape = false;
+#if EMBEDDED_CLI_HISTORY_LEN
     cli->history_pos = -1;
-    cli->searching = cli->have_csi = cli->have_escape = false;
+    cli->searching = false;
+#endif
 }
 
 void embedded_cli_init(struct embedded_cli *cli, char *prompt,
@@ -75,6 +78,7 @@ static void term_cursor_fwd(struct embedded_cli *cli, int n)
     }
 }
 
+#if EMBEDDED_CLI_HISTORY_LEN
 static void term_backspace(struct embedded_cli *cli, int n)
 {
     // printf("backspace %d ('%s': %d)\n", n, cli->buffer, cli->done);
@@ -93,6 +97,7 @@ static char *embedded_cli_get_history_search(struct embedded_cli *cli)
     }
     return NULL;
 }
+#endif
 
 static void embedded_cli_insert_default_char(struct embedded_cli *cli,
                                              char ch)
@@ -105,13 +110,16 @@ static void embedded_cli_insert_default_char(struct embedded_cli *cli,
     cli->buffer[cli->len] = '\0';
     cli->cursor++;
 
+#if EMBEDDED_CLI_HISTORY_LEN
     if (cli->searching) {
         cli_puts(cli, MOVE_BOL CLEAR_EOL "search:");
         char *h = embedded_cli_get_history_search(cli);
         if (h)
             cli_puts(cli, h);
 
-    } else {
+    } else
+#endif
+    {
         cli_puts(cli, &cli->buffer[cli->cursor - 1]);
         term_cursor_back(cli, cli->len - cli->cursor);
     }
@@ -119,6 +127,7 @@ static void embedded_cli_insert_default_char(struct embedded_cli *cli,
 
 char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos)
 {
+#if EMBEDDED_CLI_HISTORY_LEN
     int pos = 0;
 
     if (history_pos < 0)
@@ -135,8 +144,14 @@ char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos)
     }
 
     return &cli->history[pos];
+#else
+    (void)cli;
+    (void)history_pos;
+    return NULL;
+#endif
 }
 
+#if EMBEDDED_CLI_HISTORY_LEN
 static void embedded_cli_extend_history(struct embedded_cli *cli)
 {
     int len = strlen(cli->buffer);
@@ -168,6 +183,7 @@ static void embedded_cli_stop_search(struct embedded_cli *cli, bool print)
         cli_puts(cli, cli->buffer);
     }
 }
+#endif
 
 bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 {
@@ -187,6 +203,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             } else {
                 switch (ch) {
                 case 'A': {
+#if EMBEDDED_CLI_HISTORY_LEN
                     // Backspace over our current line
                     term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
                     char *line =
@@ -205,10 +222,12 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     } else {
                         embedded_cli_reset_line(cli);
                     }
+#endif
                     break;
                 }
 
                 case 'B': {
+#if EMBEDDED_CLI_HISTORY_LEN
                     term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
                     char *line =
                         embedded_cli_get_history(cli, cli->history_pos - 1);
@@ -226,6 +245,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     } else {
                         embedded_cli_reset_line(cli);
                     }
+#endif
                     break;
                 }
 
@@ -259,9 +279,11 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 break;
             case '\b': // Backspace
             case 0x7f: // backspace?
-                // printf("backspace %d\n", cli->cursor);
+                       // printf("backspace %d\n", cli->cursor);
+#if EMBEDDED_CLI_HISTORY_LEN
                 if (cli->searching)
                     embedded_cli_stop_search(cli, true);
+#endif
                 if (cli->cursor > 0) {
                     memmove(&cli->buffer[cli->cursor - 1],
                             &cli->buffer[cli->cursor],
@@ -275,14 +297,18 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 }
                 break;
             case CTRL_R:
+#if EMBEDDED_CLI_HISTORY_LEN
                 if (!cli->searching) {
                     cli_puts(cli, "\nsearch:");
                     cli->searching = true;
                 }
+#endif
                 break;
             case '\x1b':
+#if EMBEDDED_CLI_HISTORY_LEN
                 if (cli->searching)
                     embedded_cli_stop_search(cli, true);
+#endif
                 cli->have_csi = false;
                 cli->have_escape = true;
                 cli->counter = 0;
@@ -305,10 +331,11 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
     cli->done = (ch == '\n');
 
     if (cli->done) {
-        if (cli->searching) {
+#if EMBEDDED_CLI_HISTORY_LEN
+        if (cli->searching)
             embedded_cli_stop_search(cli, false);
-        }
         embedded_cli_extend_history(cli);
+#endif
         embedded_cli_reset_line(cli);
     }
     // printf("Done with char 0x%x (done=%d)\n", ch, cli->done);

@@ -3,26 +3,35 @@
 
 #include <stdbool.h>
 
+#ifndef EMBEDDED_CLI_MAX_LINE
 /**
  * Maximum number of bytes to accept in a single line
  */
 #define EMBEDDED_CLI_MAX_LINE 120
+#endif
 
+#ifndef EMBEDDED_CLI_HISTORY_LEN
 /**
  * Maximum number of bytes to retain of history data
- * Undefine this to remove support for history
+ * Define this to 0 to remove history support
  */
 #define EMBEDDED_CLI_HISTORY_LEN 1000
+#endif
 
+#ifndef EMBEDDED_CLI_MAX_ARGC
 /**
  * What is the maximum number of arguments we reserve space for
  */
-#define EMBEDDED_CLI_MAX_ARGC 20
+#define EMBEDDED_CLI_MAX_ARGC 16
+#endif
 
+
+#ifndef EMBEDDED_CLI_MAX_PROMPT_LEN
 /**
  * Maximum number of bytes in the prompt
  */
 #define EMBEDDED_CLI_MAX_PROMPT_LEN 10
+#endif
 
 /**
  * This is the structure which defines the current state of the CLI
@@ -38,10 +47,22 @@ struct embedded_cli {
      */
     char buffer[EMBEDDED_CLI_MAX_LINE];
 
+#if EMBEDDED_CLI_HISTORY_LEN
     /**
      * List of history entries
      */
     char history[EMBEDDED_CLI_HISTORY_LEN];
+
+    /**
+     * Are we searching through the history?
+     */
+    bool searching;
+
+    /**
+     * How far back in the history are we?
+     */
+    int history_pos;
+#endif
 
     /**
      * Number of characters in buffer at the moment
@@ -57,11 +78,6 @@ struct embedded_cli {
      * Have we just parsed a full line?
      */
     bool done;
-
-    /**
-     * Are we searching through the history?
-     */
-    bool searching;
 
     /**
      * Callback function to output a single character to the user
@@ -80,11 +96,6 @@ struct embedded_cli {
      * counter of the value for the CSI code
      */
     int counter;
-
-    /**
-     * How far back in the history are we?
-     */
-    int history_pos;
 
     char *argv[EMBEDDED_CLI_MAX_ARGC];
     int argc;
