@@ -278,6 +278,12 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             switch (ch) {
             case '\0':
                 break;
+            case '\x03':
+                cli_puts(cli, "^C\n");
+                cli_puts(cli, cli->prompt);
+                embedded_cli_reset_line(cli);
+                cli->buffer[0] = '\0';
+                break;
             case '\b': // Backspace
             case 0x7f: // backspace?
                        // printf("backspace %d\n", cli->cursor);
