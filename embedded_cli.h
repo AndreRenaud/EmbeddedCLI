@@ -25,7 +25,6 @@
 #define EMBEDDED_CLI_MAX_ARGC 16
 #endif
 
-
 #ifndef EMBEDDED_CLI_MAX_PROMPT_LEN
 /**
  * Maximum number of bytes in the prompt
@@ -141,6 +140,7 @@ void embedded_cli_prompt(struct embedded_cli *cli);
  * etc...
  * @return NULL if the history buffer is exceeded
  */
-const char *embedded_cli_get_history(struct embedded_cli *cli, int history_pos);
+const char *embedded_cli_get_history(struct embedded_cli *cli,
+                                     int history_pos);
 
 #endif

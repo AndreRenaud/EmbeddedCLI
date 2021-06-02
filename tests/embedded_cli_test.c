@@ -173,7 +173,8 @@ static void test_quotes(void)
     struct embedded_cli cli;
     char **argv;
     embedded_cli_init(&cli, NULL, NULL, NULL);
-    test_insert_line(&cli, "this 'is some' \"text with\" '\"quotes\"' 'concat'enated \n");
+    test_insert_line(
+        &cli, "this 'is some' \"text with\" '\"quotes\"' 'concat'enated \n");
     TEST_ASSERT(embedded_cli_argc(&cli, &argv) == 5);
     TEST_ASSERT(strcmp(argv[0], "this") == 0);
     TEST_ASSERT(strcmp(argv[1], "is some") == 0);
