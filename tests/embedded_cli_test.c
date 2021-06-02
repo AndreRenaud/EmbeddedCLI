@@ -168,6 +168,20 @@ static void test_echo(void)
     TEST_ASSERT(strcmp(output, "foo\n") == 0);
 }
 
+static void test_quotes(void)
+{
+    struct embedded_cli cli;
+    char **argv;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "this 'is some' \"text with\" '\"quotes\"' 'concat'enated \n");
+    TEST_ASSERT(embedded_cli_argc(&cli, &argv) == 5);
+    TEST_ASSERT(strcmp(argv[0], "this") == 0);
+    TEST_ASSERT(strcmp(argv[1], "is some") == 0);
+    TEST_ASSERT(strcmp(argv[2], "text with") == 0);
+    TEST_ASSERT(strcmp(argv[3], "\"quotes\"") == 0);
+    TEST_ASSERT(strcmp(argv[4], "concatenated") == 0);
+}
+
 TEST_LIST = {
     {"simple", test_simple},
     {"argc", test_argc},
@@ -181,5 +195,6 @@ TEST_LIST = {
 #endif
     {"multiple", test_multiple},
     {"echo", test_echo},
+    {"quotes", test_quotes},
     {NULL, NULL},
 };

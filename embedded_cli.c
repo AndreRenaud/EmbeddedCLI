@@ -358,10 +358,24 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
 {
     int pos = 0;
     bool in_arg = false;
+    char in_string = '\0';
     if (!cli->done)
         return 0;
-    for (size_t i = 0; i < sizeof(cli->buffer) && cli->buffer[i] != '\0';
+    for (size_t i = 0;
+         i < sizeof(cli->buffer) && cli->buffer[i] != '\0';
          i++) {
+
+        if (in_string) {
+            // If we're finishing a string, blank it out
+            if (cli->buffer[i] == in_string) {
+                memmove(&cli->buffer[i], &cli->buffer[i + 1], sizeof(cli->buffer) - i - 1);
+                in_string = '\0';
+                i--;
+            }
+            continue;
+        }
+
+
         // Skip over whitespace, and replace it with nul terminators so
         // each argv is nul terminated
         if (is_whitespace(cli->buffer[i])) {
@@ -374,6 +388,13 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
             cli->argv[pos] = &cli->buffer[i];
             pos++;
             in_arg = true;
+        }
+
+        // If we're starting a new string, absorb the character and shuffle things back
+        if (cli->buffer[i] == '\'' || cli->buffer[i] == '"') {
+            in_string = cli->buffer[i];
+            memmove(&cli->buffer[i], &cli->buffer[i + 1], sizeof(cli->buffer) - i - 1);
+            i--;
         }
     }
     *argv = cli->argv;
