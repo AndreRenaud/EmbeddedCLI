@@ -7,7 +7,7 @@ SOURCES=embedded_cli.c embedded_cli.h tests/embedded_cli_test.c examples/posix_d
 default: examples/posix_demo embedded_cli_test
 
 test: embedded_cli_test
-	./embedded_cli_test
+	./embedded_cli_test -t
 
 fuzz: embedded_cli_fuzzer
 	./embedded_cli_fuzzer -verbosity=0 -max_total_time=120 -max_len=8192 -rss_limit_mb=1024

@@ -97,7 +97,6 @@ struct embedded_cli {
     int counter;
 
     char *argv[EMBEDDED_CLI_MAX_ARGC];
-    int argc;
 
     char prompt[EMBEDDED_CLI_MAX_PROMPT_LEN];
 };
