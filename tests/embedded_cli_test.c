@@ -164,9 +164,10 @@ static void test_echo(void)
 {
     struct embedded_cli cli;
     char output[MAX_OUTPUT_LEN] = "\0";
-    embedded_cli_init(&cli, NULL, callback, output);
+    embedded_cli_init(&cli, "prompt> ", callback, output);
+    embedded_cli_prompt(&cli);
     test_insert_line(&cli, "foo\n");
-    TEST_ASSERT(strcmp(output, "foo\n") == 0);
+    TEST_ASSERT(strcmp(output, "prompt> foo\n") == 0);
 }
 
 static void test_quotes(void)
