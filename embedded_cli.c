@@ -317,6 +317,13 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 cli->buffer[cli->cursor] = '\0';
                 cli->len = cli->cursor;
                 break;
+            case '\x0c': // Ctrl-L
+                cli_puts(cli, MOVE_BOL);
+                cli_puts(cli, CLEAR_EOL);
+                cli_puts(cli, cli->prompt);
+                cli_puts(cli, cli->buffer);
+                term_cursor_back(cli, cli->len - cli->cursor);
+                break;
             case '\b': // Backspace
             case 0x7f: // backspace?
                        // printf("backspace %d\n", cli->cursor);
