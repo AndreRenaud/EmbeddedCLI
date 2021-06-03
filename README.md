@@ -12,8 +12,11 @@ Embedded CLI is a library for providing usable command line interfaces for embed
 * Cursor support (left/right/up/down)
 * Searchable history (^R to start search)
 * No dynamic allocation
- * Base structure has a fixed size, with compile time size limitations
+  * Base structure has a fixed size, with compile time size limitations
 * Comprehensive test suite, including fuzz testing for memory safety
+* Command line comprehension
+  * Support for parsing the command line into an argc/argv pair
+  * Handling of quoted strings, escaped characters etc...
 
 Works well in conjunction with the [Simple Options](https://github.com/AndreRenaud/simple_options) library to provide quick & easy argument parsing in embedded environments. Using this combination makes it simple to create an extensible CLI interface, with easy argument parsing/usage/help support.
 
@@ -29,6 +32,7 @@ No 3rd party libraries are assumed beyond the following standard C library funct
 * strcmp
 * strlen
 * strncpy
+* strcpy
 * strstr
 
 All code is C99 compliant.
