@@ -172,9 +172,10 @@ static void embedded_cli_extend_history(struct embedded_cli *cli)
 static void embedded_cli_stop_search(struct embedded_cli *cli, bool print)
 {
     const char *h = embedded_cli_get_history_search(cli);
-    if (h)
-        strcpy(cli->buffer, h);
-    else
+    if (h) {
+        strncpy(cli->buffer, h, sizeof(cli->buffer));
+        cli->buffer[sizeof(cli->buffer) - 1] = '\0';
+    } else
         cli->buffer[0] = '\0';
     cli->len = cli->cursor = strlen(cli->buffer);
     cli->searching = false;
@@ -201,6 +202,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 cli->counter = cli->counter * 10 + ch - '0';
                 // printf("cli->counter -> %d\n", cli->counter);
             } else {
+                if (cli->counter == 0)
+                    cli->counter = 1;
                 switch (ch) {
                 case 'A': {
 #if EMBEDDED_CLI_HISTORY_LEN
@@ -250,8 +253,6 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 }
 
                 case 'C':
-                    if (cli->counter == 0)
-                        cli->counter = 1;
                     if (cli->cursor <= cli->len - cli->counter) {
                         cli->cursor += cli->counter;
                         term_cursor_fwd(cli, cli->counter);
@@ -259,8 +260,6 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     break;
                 case 'D':
                     // printf("back %d vs %d\n", cli->cursor, cli->counter);
-                    if (cli->counter == 0)
-                        cli->counter = 1;
                     if (cli->cursor >= cli->counter) {
                         cli->cursor -= cli->counter;
                         term_cursor_back(cli, cli->counter);
@@ -273,6 +272,19 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 case 'H':
                     term_cursor_back(cli, cli->cursor);
                     cli->cursor = 0;
+                    break;
+                case '~':
+                    if (cli->counter == 3) { // delete key
+                        if (cli->cursor < cli->len) {
+                            memmove(&cli->buffer[cli->cursor],
+                                    &cli->buffer[cli->cursor + 1],
+                                    cli->len - cli->cursor);
+                            cli->len--;
+                            cli_puts(cli, &cli->buffer[cli->cursor]);
+                            cli_puts(cli, " ");
+                            term_cursor_back(cli, cli->len - cli->cursor + 1);
+                        }
+                    }
                     break;
                 default:
                     // TODO: Handle more escape sequences
@@ -299,6 +311,18 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             case '\x05': // Ctrl-E
                 term_cursor_fwd(cli, cli->len - cli->cursor);
                 cli->cursor = cli->len;
+                break;
+            case '\x0b': // Ctrl-K
+                cli_puts(cli, CLEAR_EOL);
+                cli->buffer[cli->cursor] = '\0';
+                cli->len = cli->cursor;
+                break;
+            case '\x0c': // Ctrl-L
+                cli_puts(cli, MOVE_BOL);
+                cli_puts(cli, CLEAR_EOL);
+                cli_puts(cli, cli->prompt);
+                cli_puts(cli, cli->buffer);
+                term_cursor_back(cli, cli->len - cli->cursor);
                 break;
             case '\b': // Backspace
             case 0x7f: // backspace?
