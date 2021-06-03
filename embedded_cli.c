@@ -194,8 +194,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->buffer[0] = '\0';
         cli->done = false;
     }
-    // printf("Inserting char %d 0x%x '%c' searching: %d\n", ch, ch, ch,
-    // cli->searching);
+    // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
     if (cli->len < (int)sizeof(cli->buffer) - 1) {
         if (cli->have_csi) {
             if (ch >= '0' && ch <= '9' && cli->counter < 100) {
@@ -250,6 +249,14 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     break;
                 }
 
+                case 'C':
+                    if (cli->counter == 0)
+                        cli->counter = 1;
+                    if (cli->cursor <= cli->len - cli->counter) {
+                        cli->cursor += cli->counter;
+                        term_cursor_fwd(cli, cli->counter);
+                    }
+                    break;
                 case 'D':
                     // printf("back %d vs %d\n", cli->cursor, cli->counter);
                     if (cli->counter == 0)
@@ -259,13 +266,13 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                         term_cursor_back(cli, cli->counter);
                     }
                     break;
-                case 'C':
-                    if (cli->counter == 0)
-                        cli->counter = 1;
-                    if (cli->cursor <= cli->len - cli->counter) {
-                        cli->cursor += cli->counter;
-                        term_cursor_fwd(cli, cli->counter);
-                    }
+                case 'F':
+                    term_cursor_fwd(cli, cli->len - cli->cursor);
+                    cli->cursor = cli->len;
+                    break;
+                case 'H':
+                    term_cursor_back(cli, cli->cursor);
+                    cli->cursor = 0;
                     break;
                 default:
                     // TODO: Handle more escape sequences
@@ -278,11 +285,20 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             switch (ch) {
             case '\0':
                 break;
+            case '\x01':
+                // Go to the beginning of the line
+                term_cursor_back(cli, cli->cursor);
+                cli->cursor = 0;
+                break;
             case '\x03':
                 cli_puts(cli, "^C\n");
                 cli_puts(cli, cli->prompt);
                 embedded_cli_reset_line(cli);
                 cli->buffer[0] = '\0';
+                break;
+            case '\x05': // Ctrl-E
+                term_cursor_fwd(cli, cli->len - cli->cursor);
+                cli->cursor = cli->len;
                 break;
             case '\b': // Backspace
             case 0x7f: // backspace?
@@ -420,7 +436,6 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
                     sizeof(cli->buffer) - i - 1);
             i--;
         }
-
     }
     *argv = cli->argv;
     return pos;
