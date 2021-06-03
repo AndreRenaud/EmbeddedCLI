@@ -33,7 +33,6 @@ No 3rd party libraries are assumed beyond the following standard C library funct
 * strlen
 * strncpy
 * strcpy
-* strstr
 
 All code is C99 compliant.
 

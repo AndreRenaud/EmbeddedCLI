@@ -10,6 +10,7 @@
 #define LEFT CSI "1D"
 #define HOME CSI "H"
 #define END CSI "F"
+#define DELETE CSI "3~"
 #define CTRL_A "\x01"
 #define CTRL_C "\x03"
 #define CTRL_E "\x05"
@@ -144,6 +145,7 @@ static void test_multiple(void)
         {"abc" CTRL_A "d" CTRL_E "fg\n", "dabcfg"},
         {"abc" HOME "def\n", "defabc"},
         {"abc" HOME "d" END "fg\n", "dabcfg"},
+        {"abc" HOME DELETE DELETE "\n", "c"},
         {NULL, NULL},
     };
 
