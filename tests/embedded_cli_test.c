@@ -175,13 +175,14 @@ static void test_quotes(void)
     char **argv;
     embedded_cli_init(&cli, NULL, NULL, NULL);
     test_insert_line(
-        &cli, "this 'is some' \"text with\" '\"quotes\"' 'concat'enated \n");
-    TEST_ASSERT(embedded_cli_argc(&cli, &argv) == 5);
+        &cli, "this 'is some' \"text with\" '\"quotes\"' 'concat'enated \\\"escape\\\" \n");
+    TEST_ASSERT(embedded_cli_argc(&cli, &argv) == 6);
     TEST_ASSERT(strcmp(argv[0], "this") == 0);
     TEST_ASSERT(strcmp(argv[1], "is some") == 0);
     TEST_ASSERT(strcmp(argv[2], "text with") == 0);
     TEST_ASSERT(strcmp(argv[3], "\"quotes\"") == 0);
     TEST_ASSERT(strcmp(argv[4], "concatenated") == 0);
+    TEST_ASSERT(strcmp(argv[5], "\"escape\"") == 0);
 }
 
 TEST_LIST = {

@@ -365,11 +365,18 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
 {
     int pos = 0;
     bool in_arg = false;
+    bool in_escape = false;
     char in_string = '\0';
     if (!cli->done)
         return 0;
     for (size_t i = 0; i < sizeof(cli->buffer) && cli->buffer[i] != '\0';
          i++) {
+
+        // If we're escaping this character, just absorb it regardless
+        if (in_escape) {
+            in_escape = false;
+            continue;
+        }
 
         if (in_string) {
             // If we're finishing a string, blank it out
@@ -390,10 +397,19 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
             in_arg = false;
             continue;
         }
+
         if (!in_arg) {
             cli->argv[pos] = &cli->buffer[i];
             pos++;
             in_arg = true;
+        }
+
+        if (cli->buffer[i] == '\\') {
+            // Absorb the escape character
+            memmove(&cli->buffer[i], &cli->buffer[i + 1],
+                    sizeof(cli->buffer) - i - 1);
+            i--;
+            in_escape = true;
         }
 
         // If we're starting a new string, absorb the character and shuffle
@@ -404,6 +420,7 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
                     sizeof(cli->buffer) - i - 1);
             i--;
         }
+
     }
     *argv = cli->argv;
     return pos;
