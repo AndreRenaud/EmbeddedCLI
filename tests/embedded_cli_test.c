@@ -134,6 +134,7 @@ static void test_multiple(void)
         {UP UP "\n", "c"},
         {"foo" UP "\n", "c"},
 #endif
+        {"abc\x03xyz\n", "xyz"},
         {NULL, NULL},
     };
 

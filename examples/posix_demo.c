@@ -2,6 +2,7 @@
  * Example of using EmbeddedCLI in a posix tty environment.
  * This is useful as a local test for new functionality
  */
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +12,8 @@
 #include <unistd.h>
 
 #include "embedded_cli.h"
+
+static struct embedded_cli cli;
 
 /**
  * This function retrieves exactly one character from stdin,
@@ -37,6 +40,12 @@ static char getch(void)
     return (buf);
 }
 
+static void intHandler(int dummy)
+{
+    (void)dummy;
+    embedded_cli_insert_char(&cli, '\x03');
+}
+
 /**
  * This function outputs a single character to stdout, to be used as the
  * callback from embedded cli
@@ -51,7 +60,6 @@ static void posix_putch(void *data, char ch)
 int main(void)
 {
     bool done = false;
-    struct embedded_cli cli;
 
     /**
      * Start up the Embedded CLI instance with the appropriate
@@ -59,6 +67,9 @@ int main(void)
      */
     embedded_cli_init(&cli, "POSIX> ", posix_putch, stdout);
     embedded_cli_prompt(&cli);
+
+    /* Capture Ctrl-C */
+    signal(SIGINT, intHandler);
 
     while (!done) {
         char ch = getch();
