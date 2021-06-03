@@ -8,6 +8,11 @@
 #define DOWN CSI "1B"
 #define RIGHT CSI "1C"
 #define LEFT CSI "1D"
+#define HOME CSI "H"
+#define END CSI "F"
+#define CTRL_A "\x01"
+#define CTRL_C "\x03"
+#define CTRL_E "\x05"
 #define CTRL_R "\x12"
 
 static void cli_equals(const struct embedded_cli *cli, const char *line)
@@ -134,7 +139,11 @@ static void test_multiple(void)
         {UP UP "\n", "c"},
         {"foo" UP "\n", "c"},
 #endif
-        {"abc\x03xyz\n", "xyz"},
+        {"abc" CTRL_C "xyz\n", "xyz"},
+        {"abc" CTRL_A "def\n", "defabc"},
+        {"abc" CTRL_A "d" CTRL_E "fg\n", "dabcfg"},
+        {"abc" HOME "def\n", "defabc"},
+        {"abc" HOME "d" END "fg\n", "dabcfg"},
         {NULL, NULL},
     };
 
@@ -175,8 +184,8 @@ static void test_quotes(void)
     struct embedded_cli cli;
     char **argv;
     embedded_cli_init(&cli, NULL, NULL, NULL);
-    test_insert_line(
-        &cli, "this 'is some' \"text with\" '\"quotes\"' 'concat'enated \\\"escape\\\" \n");
+    test_insert_line(&cli, "this 'is some' \"text with\" '\"quotes\"' "
+                           "'concat'enated \\\"escape\\\" \n");
     TEST_ASSERT(embedded_cli_argc(&cli, &argv) == 6);
     TEST_ASSERT(strcmp(argv[0], "this") == 0);
     TEST_ASSERT(strcmp(argv[1], "is some") == 0);
