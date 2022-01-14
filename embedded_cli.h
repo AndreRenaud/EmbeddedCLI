@@ -104,7 +104,7 @@ struct embedded_cli {
 /**
  * Start up the Embedded CLI subsystem. This should only be called once.
  */
-void embedded_cli_init(struct embedded_cli *, char *prompt,
+void embedded_cli_init(struct embedded_cli *, const char *prompt,
                        void (*putchar)(void *data, char ch), void *cb_data);
 
 /**
