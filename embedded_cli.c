@@ -40,7 +40,7 @@ static void embedded_cli_reset_line(struct embedded_cli *cli)
 #endif
 }
 
-void embedded_cli_init(struct embedded_cli *cli, char *prompt,
+void embedded_cli_init(struct embedded_cli *cli, const char *prompt,
                        void (*putchar)(void *data, char ch), void *cb_data)
 {
     memset(cli, 0, sizeof(*cli));
