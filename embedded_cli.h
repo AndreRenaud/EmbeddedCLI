@@ -32,6 +32,14 @@
 #define EMBEDDED_CLI_MAX_PROMPT_LEN 10
 #endif
 
+#ifndef EMBEDDED_CLI_SERIAL_XLATE
+/**
+ * Translate CR -> NL on input and output CR NL on output. This allows "natural" processing when
+ * using a serial terminal.
+ */
+#define EMBEDDED_CLI_SERIAL_XLATE 1
+#endif
+
 /**
  * This is the structure which defines the current state of the CLI
  * NOTE: Although this structure is exposed here, it is not recommended
