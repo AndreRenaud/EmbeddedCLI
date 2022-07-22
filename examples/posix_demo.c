@@ -25,16 +25,25 @@ static char getch(void)
     struct termios old = {0};
     if (tcgetattr(0, &old) < 0)
         perror("tcsetattr()");
-    old.c_lflag &= ~ICANON;
-    old.c_lflag &= ~ECHO;
-    old.c_cc[VMIN] = 1;
-    old.c_cc[VTIME] = 0;
-    if (tcsetattr(0, TCSANOW, &old) < 0)
+
+    struct termios raw = old;
+
+    // Do what cfmakeraw does (Using --std=c99 means that cfmakeraw isn't available)
+    raw.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    raw.c_oflag &= ~OPOST;
+    raw.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    raw.c_cflag &= ~(CSIZE|PARENB);
+    raw.c_cflag |= CS8;
+
+    raw.c_cc[VMIN] = 1;
+    raw.c_cc[VTIME] = 0;
+
+    if (tcsetattr(0, TCSANOW, &raw) < 0)
         perror("tcsetattr ICANON");
+
     if (read(0, &buf, 1) < 0)
         perror("read()");
-    old.c_lflag |= ICANON;
-    old.c_lflag |= ECHO;
+
     if (tcsetattr(0, TCSADRAIN, &old) < 0)
         perror("tcsetattr ~ICANON");
     return (buf);
