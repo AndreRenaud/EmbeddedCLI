@@ -24,8 +24,13 @@ static void cli_puts(struct embedded_cli *cli, const char *s)
 
 static void cli_putchar(struct embedded_cli *cli, char ch)
 {
-    if (cli->putchar)
+    if (cli->putchar) {
+#if EMBEDDED_CLI_SERIAL_XLATE
+        if (ch == '\n')
+            cli->putchar(cli->cb_data, '\r');
+#endif
         cli->putchar(cli->cb_data, ch);
+    }
 }
 
 static void embedded_cli_reset_line(struct embedded_cli *cli)
@@ -365,6 +370,11 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 else
                     embedded_cli_insert_default_char(cli, ch);
                 break;
+#if EMBEDDED_CLI_SERIAL_XLATE
+            case '\r':
+                ch = '\n';  // So cli->done will exit
+#endif
+                // fallthrough
             case '\n':
                 cli_putchar(cli, '\n');
                 break;

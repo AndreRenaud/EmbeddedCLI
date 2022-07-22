@@ -1,4 +1,4 @@
-CFLAGS=-g -Wall -Wextra -Werror -pipe -I. -std=c99
+CFLAGS=-g -Wall -Wextra -Werror -pipe -I. --std=c99
 CLANG_FORMAT=clang-format
 CLANG?=clang
 
