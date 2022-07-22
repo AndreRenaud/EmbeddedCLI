@@ -182,7 +182,7 @@ static void test_echo(void)
     embedded_cli_init(&cli, "prompt> ", callback, output);
     embedded_cli_prompt(&cli);
     test_insert_line(&cli, "foo\n");
-    TEST_ASSERT(strcmp(output, "prompt> foo\n") == 0);
+    TEST_ASSERT(strcmp(output, "prompt> foo\r\n") == 0);
 }
 
 static void test_quotes(void)
