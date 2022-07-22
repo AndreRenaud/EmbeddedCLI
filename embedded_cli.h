@@ -34,8 +34,8 @@
 
 #ifndef EMBEDDED_CLI_SERIAL_XLATE
 /**
- * Translate CR -> NL on input and output CR NL on output. This allows "natural" processing when
- * using a serial terminal.
+ * Translate CR -> NL on input and output CR NL on output. This allows
+ * "natural" processing when using a serial terminal.
  */
 #define EMBEDDED_CLI_SERIAL_XLATE 1
 #endif

@@ -28,11 +28,13 @@ static char getch(void)
 
     struct termios raw = old;
 
-    // Do what cfmakeraw does (Using --std=c99 means that cfmakeraw isn't available)
-    raw.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    // Do what cfmakeraw does (Using --std=c99 means that cfmakeraw isn't
+    // available)
+    raw.c_iflag &=
+        ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
     raw.c_oflag &= ~OPOST;
-    raw.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-    raw.c_cflag &= ~(CSIZE|PARENB);
+    raw.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    raw.c_cflag &= ~(CSIZE | PARENB);
     raw.c_cflag |= CS8;
 
     raw.c_cc[VMIN] = 1;

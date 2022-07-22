@@ -372,7 +372,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 break;
 #if EMBEDDED_CLI_SERIAL_XLATE
             case '\r':
-                ch = '\n';  // So cli->done will exit
+                ch = '\n'; // So cli->done will exit
 #endif
                 // fallthrough
             case '\n':
