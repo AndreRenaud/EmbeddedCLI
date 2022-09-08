@@ -41,6 +41,14 @@
 #endif
 
 /**
+ * The MSP430 gcc distribution has putchar as a macro rather than a function.
+ * This, in turn, causes compile errors. So we undefine the macro.
+ */
+#if defined(putchar)
+#undef putchar
+#endif
+
+/**
  * This is the structure which defines the current state of the CLI
  * NOTE: Although this structure is exposed here, it is not recommended
  * that it be interacted with directly. Use the accessor functions below to
