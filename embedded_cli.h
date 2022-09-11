@@ -89,10 +89,10 @@ struct embedded_cli {
     /**
      * Callback function to output a single character to the user
      */
-    void (*putchar)(void *data, char ch);
+    void (*put_char)(void *data, char ch);
 
     /**
-     * Data to provide to the putchar callback
+     * Data to provide to the put_char callback
      */
     void *cb_data;
 
@@ -113,7 +113,7 @@ struct embedded_cli {
  * Start up the Embedded CLI subsystem. This should only be called once.
  */
 void embedded_cli_init(struct embedded_cli *, const char *prompt,
-                       void (*putchar)(void *data, char ch), void *cb_data);
+                       void (*put_char)(void *data, char ch), void *cb_data);
 
 /**
  * Adds a new character into the buffer. Returns true if

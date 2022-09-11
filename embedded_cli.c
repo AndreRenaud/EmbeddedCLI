@@ -16,20 +16,20 @@
 
 static void cli_puts(struct embedded_cli *cli, const char *s)
 {
-    if (!cli->putchar)
+    if (!cli->put_char)
         return;
     for (; *s; s++)
-        cli->putchar(cli->cb_data, *s);
+        cli->put_char(cli->cb_data, *s);
 }
 
 static void cli_putchar(struct embedded_cli *cli, char ch)
 {
-    if (cli->putchar) {
+    if (cli->put_char) {
 #if EMBEDDED_CLI_SERIAL_XLATE
         if (ch == '\n')
-            cli->putchar(cli->cb_data, '\r');
+            cli->put_char(cli->cb_data, '\r');
 #endif
-        cli->putchar(cli->cb_data, ch);
+        cli->put_char(cli->cb_data, ch);
     }
 }
 
@@ -46,10 +46,10 @@ static void embedded_cli_reset_line(struct embedded_cli *cli)
 }
 
 void embedded_cli_init(struct embedded_cli *cli, const char *prompt,
-                       void (*putchar)(void *data, char ch), void *cb_data)
+                       void (*put_char)(void *data, char ch), void *cb_data)
 {
     memset(cli, 0, sizeof(*cli));
-    cli->putchar = putchar;
+    cli->put_char = put_char;
     cli->cb_data = cb_data;
     if (prompt) {
         strncpy(cli->prompt, prompt, sizeof(cli->prompt));
