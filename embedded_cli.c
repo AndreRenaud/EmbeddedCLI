@@ -448,6 +448,9 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
         }
 
         if (!in_arg) {
+            if (pos >= EMBEDDED_CLI_MAX_ARGC) {
+                break;
+            }
             cli->argv[pos] = &cli->buffer[i];
             pos++;
             in_arg = true;
@@ -470,6 +473,12 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
             i--;
         }
     }
+    // Traditionally, there is a NULL entry at argv[argc].
+    if (pos >= EMBEDDED_CLI_MAX_ARGC) {
+        pos--;
+    }
+    cli->argv[pos] = NULL;
+
     *argv = cli->argv;
     return pos;
 }
