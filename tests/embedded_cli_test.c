@@ -201,6 +201,20 @@ static void test_quotes(void)
     TEST_ASSERT(strcmp(argv[5], "\"escape\"") == 0);
 }
 
+static void test_too_many_args(void)
+{
+    struct embedded_cli cli;
+    char **argv;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "a b c d e f g h i j k l m n o p q r s\n");
+    TEST_ASSERT(embedded_cli_argc(&cli, &argv) == EMBEDDED_CLI_MAX_ARGC - 1);
+    TEST_ASSERT(strcmp(argv[0], "a") == 0);
+    TEST_ASSERT(strcmp(argv[1], "b") == 0);
+    TEST_ASSERT(strcmp(argv[13], "n") == 0);
+    TEST_ASSERT(strcmp(argv[14], "o") == 0);
+    TEST_ASSERT(argv[15] == NULL);
+}
+
 TEST_LIST = {
     {"simple", test_simple},
     {"argc", test_argc},
@@ -215,5 +229,6 @@ TEST_LIST = {
     {"multiple", test_multiple},
     {"echo", test_echo},
     {"quotes", test_quotes},
+    {"too_many_args", test_too_many_args},
     {NULL, NULL},
 };
