@@ -14,14 +14,6 @@
 #define CLEAR_EOL "\x1b[0K"
 #define MOVE_BOL "\x1b[1G"
 
-static void cli_puts(struct embedded_cli *cli, const char *s)
-{
-    if (!cli->put_char)
-        return;
-    for (; *s; s++)
-        cli->put_char(cli->cb_data, *s);
-}
-
 static void cli_putchar(struct embedded_cli *cli, char ch)
 {
     if (cli->put_char) {
@@ -31,6 +23,12 @@ static void cli_putchar(struct embedded_cli *cli, char ch)
 #endif
         cli->put_char(cli->cb_data, ch);
     }
+}
+
+static void cli_puts(struct embedded_cli *cli, const char *s)
+{
+    for (; *s; s++)
+        cli_putchar(cli, *s);
 }
 
 static void embedded_cli_reset_line(struct embedded_cli *cli)
