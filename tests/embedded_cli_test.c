@@ -230,9 +230,9 @@ static void test_max_chars(void)
     // Make sure we can backspace & change the last character
     embedded_cli_insert_char(&cli, '\b');
     embedded_cli_insert_char(&cli, 'f');
-    // There is always a nul at the end, so the one before that should now be an f
+    // There is always a nul at the end, so the one before that should now be
+    // an f
     TEST_ASSERT(cli.buffer[sizeof(cli.buffer) - 2] == 'f');
-
 }
 
 TEST_LIST = {

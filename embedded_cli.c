@@ -105,6 +105,9 @@ static const char *embedded_cli_get_history_search(struct embedded_cli *cli)
 static void embedded_cli_insert_default_char(struct embedded_cli *cli,
                                              char ch)
 {
+    // If the buffer is full, there's nothing we can do
+    if (cli->len >= (int)sizeof(cli->buffer) - 1)
+        return;
     // Insert a gap in the buffer for the new character
     memmove(&cli->buffer[cli->cursor + 1], &cli->buffer[cli->cursor],
             cli->len - cli->cursor);
@@ -199,188 +202,185 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->done = false;
     }
     // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
-    // We can add a character if the buffer has space, or if it's a backspace
-    if ((cli->len < (int)sizeof(cli->buffer) - 1) || (!cli->have_csi && (ch == '\b' || ch == '\x7f'))) {
-        if (cli->have_csi) {
-            if (ch >= '0' && ch <= '9' && cli->counter < 100) {
-                cli->counter = cli->counter * 10 + ch - '0';
-                // printf("cli->counter -> %d\n", cli->counter);
-            } else {
-                if (cli->counter == 0)
-                    cli->counter = 1;
-                switch (ch) {
-                case 'A': {
-#if EMBEDDED_CLI_HISTORY_LEN
-                    // Backspace over our current line
-                    term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
-                    const char *line =
-                        embedded_cli_get_history(cli, cli->history_pos + 1);
-                    if (line) {
-                        int len = strlen(line);
-                        cli->history_pos++;
-                        // printf("history up %d = '%s'\n", cli->history_pos,
-                        // line);
-                        strncpy(cli->buffer, line, sizeof(cli->buffer));
-                        cli->buffer[sizeof(cli->buffer) - 1] = '\0';
-                        cli->len = len;
-                        cli->cursor = len;
-                        cli_puts(cli, cli->buffer);
-                        cli_puts(cli, CLEAR_EOL);
-                    } else {
-                        embedded_cli_reset_line(cli);
-                    }
-#endif
-                    break;
-                }
-
-                case 'B': {
-#if EMBEDDED_CLI_HISTORY_LEN
-                    term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
-                    const char *line =
-                        embedded_cli_get_history(cli, cli->history_pos - 1);
-                    if (line) {
-                        int len = strlen(line);
-                        cli->history_pos--;
-                        // printf("history down %d = '%s'\n",
-                        // cli->history_pos, line);
-                        strncpy(cli->buffer, line, sizeof(cli->buffer));
-                        cli->buffer[sizeof(cli->buffer) - 1] = '\0';
-                        cli->len = len;
-                        cli->cursor = len;
-                        cli_puts(cli, cli->buffer);
-                        cli_puts(cli, CLEAR_EOL);
-                    } else {
-                        embedded_cli_reset_line(cli);
-                    }
-#endif
-                    break;
-                }
-
-                case 'C':
-                    if (cli->cursor <= cli->len - cli->counter) {
-                        cli->cursor += cli->counter;
-                        term_cursor_fwd(cli, cli->counter);
-                    }
-                    break;
-                case 'D':
-                    // printf("back %d vs %d\n", cli->cursor, cli->counter);
-                    if (cli->cursor >= cli->counter) {
-                        cli->cursor -= cli->counter;
-                        term_cursor_back(cli, cli->counter);
-                    }
-                    break;
-                case 'F':
-                    term_cursor_fwd(cli, cli->len - cli->cursor);
-                    cli->cursor = cli->len;
-                    break;
-                case 'H':
-                    term_cursor_back(cli, cli->cursor);
-                    cli->cursor = 0;
-                    break;
-                case '~':
-                    if (cli->counter == 3) { // delete key
-                        if (cli->cursor < cli->len) {
-                            memmove(&cli->buffer[cli->cursor],
-                                    &cli->buffer[cli->cursor + 1],
-                                    cli->len - cli->cursor);
-                            cli->len--;
-                            cli_puts(cli, &cli->buffer[cli->cursor]);
-                            cli_puts(cli, " ");
-                            term_cursor_back(cli, cli->len - cli->cursor + 1);
-                        }
-                    }
-                    break;
-                default:
-                    // TODO: Handle more escape sequences
-                    break;
-                }
-                cli->have_csi = cli->have_escape = false;
-                cli->counter = 0;
-            }
+    if (cli->have_csi) {
+        if (ch >= '0' && ch <= '9' && cli->counter < 100) {
+            cli->counter = cli->counter * 10 + ch - '0';
+            // printf("cli->counter -> %d\n", cli->counter);
         } else {
+            if (cli->counter == 0)
+                cli->counter = 1;
             switch (ch) {
-            case '\0':
+            case 'A': {
+#if EMBEDDED_CLI_HISTORY_LEN
+                // Backspace over our current line
+                term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
+                const char *line =
+                    embedded_cli_get_history(cli, cli->history_pos + 1);
+                if (line) {
+                    int len = strlen(line);
+                    cli->history_pos++;
+                    // printf("history up %d = '%s'\n", cli->history_pos,
+                    // line);
+                    strncpy(cli->buffer, line, sizeof(cli->buffer));
+                    cli->buffer[sizeof(cli->buffer) - 1] = '\0';
+                    cli->len = len;
+                    cli->cursor = len;
+                    cli_puts(cli, cli->buffer);
+                    cli_puts(cli, CLEAR_EOL);
+                } else {
+                    embedded_cli_reset_line(cli);
+                }
+#endif
                 break;
-            case '\x01':
-                // Go to the beginning of the line
-                term_cursor_back(cli, cli->cursor);
-                cli->cursor = 0;
+            }
+
+            case 'B': {
+#if EMBEDDED_CLI_HISTORY_LEN
+                term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
+                const char *line =
+                    embedded_cli_get_history(cli, cli->history_pos - 1);
+                if (line) {
+                    int len = strlen(line);
+                    cli->history_pos--;
+                    // printf("history down %d = '%s'\n",
+                    // cli->history_pos, line);
+                    strncpy(cli->buffer, line, sizeof(cli->buffer));
+                    cli->buffer[sizeof(cli->buffer) - 1] = '\0';
+                    cli->len = len;
+                    cli->cursor = len;
+                    cli_puts(cli, cli->buffer);
+                    cli_puts(cli, CLEAR_EOL);
+                } else {
+                    embedded_cli_reset_line(cli);
+                }
+#endif
                 break;
-            case '\x03':
-                cli_puts(cli, "^C\n");
-                cli_puts(cli, cli->prompt);
-                embedded_cli_reset_line(cli);
-                cli->buffer[0] = '\0';
+            }
+
+            case 'C':
+                if (cli->cursor <= cli->len - cli->counter) {
+                    cli->cursor += cli->counter;
+                    term_cursor_fwd(cli, cli->counter);
+                }
                 break;
-            case '\x05': // Ctrl-E
+            case 'D':
+                // printf("back %d vs %d\n", cli->cursor, cli->counter);
+                if (cli->cursor >= cli->counter) {
+                    cli->cursor -= cli->counter;
+                    term_cursor_back(cli, cli->counter);
+                }
+                break;
+            case 'F':
                 term_cursor_fwd(cli, cli->len - cli->cursor);
                 cli->cursor = cli->len;
                 break;
-            case '\x0b': // Ctrl-K
-                cli_puts(cli, CLEAR_EOL);
-                cli->buffer[cli->cursor] = '\0';
-                cli->len = cli->cursor;
+            case 'H':
+                term_cursor_back(cli, cli->cursor);
+                cli->cursor = 0;
                 break;
-            case '\x0c': // Ctrl-L
-                cli_puts(cli, MOVE_BOL CLEAR_EOL);
-                cli_puts(cli, cli->prompt);
-                cli_puts(cli, cli->buffer);
-                term_cursor_back(cli, cli->len - cli->cursor);
-                break;
-            case '\b': // Backspace
-            case 0x7f: // backspace?
-                       // printf("backspace %d\n", cli->cursor);
-#if EMBEDDED_CLI_HISTORY_LEN
-                if (cli->searching)
-                    embedded_cli_stop_search(cli, true);
-#endif
-                if (cli->cursor > 0) {
-                    memmove(&cli->buffer[cli->cursor - 1],
-                            &cli->buffer[cli->cursor],
-                            cli->len - cli->cursor + 1);
-                    cli->cursor--;
-                    cli->len--;
-                    term_cursor_back(cli, 1);
-                    cli_puts(cli, &cli->buffer[cli->cursor]);
-                    cli_puts(cli, " ");
-                    term_cursor_back(cli, cli->len - cli->cursor + 1);
+            case '~':
+                if (cli->counter == 3) { // delete key
+                    if (cli->cursor < cli->len) {
+                        memmove(&cli->buffer[cli->cursor],
+                                &cli->buffer[cli->cursor + 1],
+                                cli->len - cli->cursor);
+                        cli->len--;
+                        cli_puts(cli, &cli->buffer[cli->cursor]);
+                        cli_puts(cli, " ");
+                        term_cursor_back(cli, cli->len - cli->cursor + 1);
+                    }
                 }
-                break;
-            case CTRL_R:
-#if EMBEDDED_CLI_HISTORY_LEN
-                if (!cli->searching) {
-                    cli_puts(cli, "\nsearch:");
-                    cli->searching = true;
-                }
-#endif
-                break;
-            case '\x1b':
-#if EMBEDDED_CLI_HISTORY_LEN
-                if (cli->searching)
-                    embedded_cli_stop_search(cli, true);
-#endif
-                cli->have_csi = false;
-                cli->have_escape = true;
-                cli->counter = 0;
-                break;
-            case '[':
-                if (cli->have_escape)
-                    cli->have_csi = true;
-                else
-                    embedded_cli_insert_default_char(cli, ch);
-                break;
-#if EMBEDDED_CLI_SERIAL_XLATE
-            case '\r':
-                ch = '\n'; // So cli->done will exit
-#endif
-                // fallthrough
-            case '\n':
-                cli_putchar(cli, '\n');
                 break;
             default:
-                if (ch > 0)
-                    embedded_cli_insert_default_char(cli, ch);
+                // TODO: Handle more escape sequences
+                break;
             }
+            cli->have_csi = cli->have_escape = false;
+            cli->counter = 0;
+        }
+    } else {
+        switch (ch) {
+        case '\0':
+            break;
+        case '\x01':
+            // Go to the beginning of the line
+            term_cursor_back(cli, cli->cursor);
+            cli->cursor = 0;
+            break;
+        case '\x03':
+            cli_puts(cli, "^C\n");
+            cli_puts(cli, cli->prompt);
+            embedded_cli_reset_line(cli);
+            cli->buffer[0] = '\0';
+            break;
+        case '\x05': // Ctrl-E
+            term_cursor_fwd(cli, cli->len - cli->cursor);
+            cli->cursor = cli->len;
+            break;
+        case '\x0b': // Ctrl-K
+            cli_puts(cli, CLEAR_EOL);
+            cli->buffer[cli->cursor] = '\0';
+            cli->len = cli->cursor;
+            break;
+        case '\x0c': // Ctrl-L
+            cli_puts(cli, MOVE_BOL CLEAR_EOL);
+            cli_puts(cli, cli->prompt);
+            cli_puts(cli, cli->buffer);
+            term_cursor_back(cli, cli->len - cli->cursor);
+            break;
+        case '\b': // Backspace
+        case 0x7f: // backspace?
+                   // printf("backspace %d\n", cli->cursor);
+#if EMBEDDED_CLI_HISTORY_LEN
+            if (cli->searching)
+                embedded_cli_stop_search(cli, true);
+#endif
+            if (cli->cursor > 0) {
+                memmove(&cli->buffer[cli->cursor - 1],
+                        &cli->buffer[cli->cursor],
+                        cli->len - cli->cursor + 1);
+                cli->cursor--;
+                cli->len--;
+                term_cursor_back(cli, 1);
+                cli_puts(cli, &cli->buffer[cli->cursor]);
+                cli_puts(cli, " ");
+                term_cursor_back(cli, cli->len - cli->cursor + 1);
+            }
+            break;
+        case CTRL_R:
+#if EMBEDDED_CLI_HISTORY_LEN
+            if (!cli->searching) {
+                cli_puts(cli, "\nsearch:");
+                cli->searching = true;
+            }
+#endif
+            break;
+        case '\x1b':
+#if EMBEDDED_CLI_HISTORY_LEN
+            if (cli->searching)
+                embedded_cli_stop_search(cli, true);
+#endif
+            cli->have_csi = false;
+            cli->have_escape = true;
+            cli->counter = 0;
+            break;
+        case '[':
+            if (cli->have_escape)
+                cli->have_csi = true;
+            else
+                embedded_cli_insert_default_char(cli, ch);
+            break;
+#if EMBEDDED_CLI_SERIAL_XLATE
+        case '\r':
+            ch = '\n'; // So cli->done will exit
+#endif
+            // fallthrough
+        case '\n':
+            cli_putchar(cli, '\n');
+            break;
+        default:
+            if (ch > 0)
+                embedded_cli_insert_default_char(cli, ch);
         }
     }
     cli->done = (ch == '\n');
