@@ -199,7 +199,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->done = false;
     }
     // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
-    if (cli->len < (int)sizeof(cli->buffer) - 1) {
+    // We can add a character if the buffer has space, or if it's a backspace
+    if ((cli->len < (int)sizeof(cli->buffer) - 1) || (!cli->have_csi && (ch == '\b' || ch == '\x7f'))) {
         if (cli->have_csi) {
             if (ch >= '0' && ch <= '9' && cli->counter < 100) {
                 cli->counter = cli->counter * 10 + ch - '0';

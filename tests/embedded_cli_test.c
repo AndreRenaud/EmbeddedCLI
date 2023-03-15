@@ -215,6 +215,26 @@ static void test_too_many_args(void)
     TEST_ASSERT(argv[15] == NULL);
 }
 
+static void test_max_chars(void)
+{
+    struct embedded_cli cli;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    // Fill in the buffer
+    for (int i = 0; i < EMBEDDED_CLI_MAX_LINE; i++) {
+        embedded_cli_insert_char(&cli, 'b');
+    }
+    // Make sure we cannot insert a character now
+    embedded_cli_insert_char(&cli, 'x');
+    TEST_ASSERT(cli.buffer[sizeof(cli.buffer) - 2] == 'b');
+    TEST_ASSERT(cli.buffer[sizeof(cli.buffer) - 1] == '\0');
+    // Make sure we can backspace & change the last character
+    embedded_cli_insert_char(&cli, '\b');
+    embedded_cli_insert_char(&cli, 'f');
+    // There is always a nul at the end, so the one before that should now be an f
+    TEST_ASSERT(cli.buffer[sizeof(cli.buffer) - 2] == 'f');
+
+}
+
 TEST_LIST = {
     {"simple", test_simple},
     {"argc", test_argc},
@@ -230,5 +250,6 @@ TEST_LIST = {
     {"echo", test_echo},
     {"quotes", test_quotes},
     {"too_many_args", test_too_many_args},
+    {"max_chars", test_max_chars},
     {NULL, NULL},
 };
