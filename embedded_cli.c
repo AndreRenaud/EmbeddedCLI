@@ -87,7 +87,7 @@ static void term_backspace(struct embedded_cli *cli, int n)
 {
     // printf("backspace %d ('%s': %d)\n", n, cli->buffer, cli->done);
     while (n--)
-        cli_putchar(cli, '\b', n != 0);
+        cli_putchar(cli, '\b', n == 0);
 }
 
 static const char *embedded_cli_get_history_search(struct embedded_cli *cli)
