@@ -163,8 +163,9 @@ static void test_multiple(void)
 
 #define MAX_OUTPUT_LEN 50
 
-static void callback(void *data, char ch)
+static void callback(void *data, char ch, bool is_last)
 {
+    (void)is_last;
     char *d = (char *)data;
     if (d) {
         int len = strlen(d);
