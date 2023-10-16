@@ -61,11 +61,12 @@ static void intHandler(int dummy)
  * This function outputs a single character to stdout, to be used as the
  * callback from embedded cli
  */
-static void posix_putch(void *data, char ch)
+static void posix_putch(void *data, char ch, bool is_last)
 {
     FILE *fp = data;
     fputc(ch, fp);
-    fflush(fp);
+    if (is_last)
+        fflush(fp);
 }
 
 int main(void)

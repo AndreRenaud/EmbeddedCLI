@@ -14,7 +14,8 @@ jobs:
         run: make fuzz
       - name: Valgrind
         run: |
-          sudo apt-get install -y valgrind
+          sudo apt update
+          sudo apt install -y valgrind
           valgrind --leak-check=full --error-exitcode=1 ./embedded_cli_test
       - name: Test no history
         run: |

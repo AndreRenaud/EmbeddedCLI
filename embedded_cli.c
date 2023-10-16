@@ -14,21 +14,21 @@
 #define CLEAR_EOL "\x1b[0K"
 #define MOVE_BOL "\x1b[1G"
 
-static void cli_putchar(struct embedded_cli *cli, char ch)
+static void cli_putchar(struct embedded_cli *cli, char ch, bool is_last)
 {
     if (cli->put_char) {
 #if EMBEDDED_CLI_SERIAL_XLATE
         if (ch == '\n')
-            cli->put_char(cli->cb_data, '\r');
+            cli->put_char(cli->cb_data, '\r', false);
 #endif
-        cli->put_char(cli->cb_data, ch);
+        cli->put_char(cli->cb_data, ch, is_last);
     }
 }
 
 static void cli_puts(struct embedded_cli *cli, const char *s)
 {
     for (; *s; s++)
-        cli_putchar(cli, *s);
+        cli_putchar(cli, *s, s[1] == '\0');
 }
 
 static void embedded_cli_reset_line(struct embedded_cli *cli)
@@ -44,7 +44,8 @@ static void embedded_cli_reset_line(struct embedded_cli *cli)
 }
 
 void embedded_cli_init(struct embedded_cli *cli, const char *prompt,
-                       void (*put_char)(void *data, char ch), void *cb_data)
+                       void (*put_char)(void *data, char ch, bool is_last),
+                       void *cb_data)
 {
     memset(cli, 0, sizeof(*cli));
     cli->put_char = put_char;
@@ -86,7 +87,7 @@ static void term_backspace(struct embedded_cli *cli, int n)
 {
     // printf("backspace %d ('%s': %d)\n", n, cli->buffer, cli->done);
     while (n--)
-        cli_putchar(cli, '\b');
+        cli_putchar(cli, '\b', n == 0);
 }
 
 static const char *embedded_cli_get_history_search(struct embedded_cli *cli)
@@ -382,7 +383,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
 #endif
             // fallthrough
         case '\n':
-            cli_putchar(cli, '\n');
+            cli_putchar(cli, '\n', true);
             break;
         default:
             if (ch > 0)
