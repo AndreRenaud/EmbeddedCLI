@@ -211,10 +211,10 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             if (cli->counter == 0)
                 cli->counter = 1;
             switch (ch) {
-            case 'A': {
+            case 'A': { // up arrow
 #if EMBEDDED_CLI_HISTORY_LEN
                 // Backspace over our current line
-                term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
+                term_backspace(cli, cli->done ? 0 : cli->cursor);
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos + 1);
                 if (line) {
@@ -229,15 +229,20 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli_puts(cli, cli->buffer);
                     cli_puts(cli, CLEAR_EOL);
                 } else {
+                    int tmp = cli->history_pos; // We don't want to wrap this
+                                                // history, so retain it
+                    cli->buffer[0] = '\0';
                     embedded_cli_reset_line(cli);
+                    cli->history_pos = tmp;
+                    cli_puts(cli, CLEAR_EOL);
                 }
 #endif
                 break;
             }
 
-            case 'B': {
+            case 'B': { // down arrow
 #if EMBEDDED_CLI_HISTORY_LEN
-                term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
+                term_backspace(cli, cli->done ? 0 : cli->cursor);
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos - 1);
                 if (line) {
@@ -252,7 +257,9 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli_puts(cli, cli->buffer);
                     cli_puts(cli, CLEAR_EOL);
                 } else {
+                    cli->buffer[0] = '\0';
                     embedded_cli_reset_line(cli);
+                    cli_puts(cli, CLEAR_EOL);
                 }
 #endif
                 break;
