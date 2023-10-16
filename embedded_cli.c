@@ -201,7 +201,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->buffer[0] = '\0';
         cli->done = false;
     }
-    // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
+    //printf("Inserting char %d 0x%x '%c' csi:%d\n", ch, ch, ch, cli->have_csi);
     if (cli->have_csi) {
         if (ch >= '0' && ch <= '9' && cli->counter < 100) {
             cli->counter = cli->counter * 10 + ch - '0';
@@ -210,10 +210,10 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             if (cli->counter == 0)
                 cli->counter = 1;
             switch (ch) {
-            case 'A': {
+            case 'A': { // up arrow
 #if EMBEDDED_CLI_HISTORY_LEN
                 // Backspace over our current line
-                term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
+                term_backspace(cli, cli->done ? 0 : cli->cursor);
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos + 1);
                 if (line) {
@@ -228,15 +228,18 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli_puts(cli, cli->buffer);
                     cli_puts(cli, CLEAR_EOL);
                 } else {
+                    cli->buffer[0] = '\0';
+                    cli->cursor = 0;
                     embedded_cli_reset_line(cli);
+                    cli_puts(cli, CLEAR_EOL);
                 }
 #endif
                 break;
             }
 
-            case 'B': {
+            case 'B': { // down arrow
 #if EMBEDDED_CLI_HISTORY_LEN
-                term_backspace(cli, cli->done ? 0 : strlen(cli->buffer));
+                term_backspace(cli, cli->done ? 0 : cli->cursor);
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos - 1);
                 if (line) {
@@ -251,7 +254,10 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli_puts(cli, cli->buffer);
                     cli_puts(cli, CLEAR_EOL);
                 } else {
+                    cli->buffer[0] = '\0';
+                    cli->cursor = 0;
                     embedded_cli_reset_line(cli);
+                    cli_puts(cli, CLEAR_EOL);
                 }
 #endif
                 break;
