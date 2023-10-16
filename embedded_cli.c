@@ -229,9 +229,11 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli_puts(cli, cli->buffer);
                     cli_puts(cli, CLEAR_EOL);
                 } else {
+                    int tmp = cli->history_pos; // We don't want to wrap this
+                                                // history, so retain it
                     cli->buffer[0] = '\0';
-                    cli->cursor = 0;
                     embedded_cli_reset_line(cli);
+                    cli->history_pos = tmp;
                     cli_puts(cli, CLEAR_EOL);
                 }
 #endif
@@ -256,7 +258,6 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     cli_puts(cli, CLEAR_EOL);
                 } else {
                     cli->buffer[0] = '\0';
-                    cli->cursor = 0;
                     embedded_cli_reset_line(cli);
                     cli_puts(cli, CLEAR_EOL);
                 }
