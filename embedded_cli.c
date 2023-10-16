@@ -201,7 +201,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
         cli->buffer[0] = '\0';
         cli->done = false;
     }
-    //printf("Inserting char %d 0x%x '%c' csi:%d\n", ch, ch, ch, cli->have_csi);
+    // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
     if (cli->have_csi) {
         if (ch >= '0' && ch <= '9' && cli->counter < 100) {
             cli->counter = cli->counter * 10 + ch - '0';
