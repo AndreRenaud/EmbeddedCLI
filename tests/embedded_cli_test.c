@@ -122,6 +122,69 @@ static void test_search(void)
     test_insert_line(&cli, CTRL_R "Se\n");
     cli_equals(&cli, "Second");
 }
+
+static char output[1024];
+
+// Super minimal tty code interpreter so we can work out what
+// the user's display looks like
+static void output_putchar(void *data, char ch, bool is_last)
+{
+    static int output_pos = 0;
+    static bool have_escape = false;
+    static bool have_csi = false;
+    (void)is_last;
+    (void)data;
+    if (ch == '\x1b') {
+        have_escape = true;
+        have_csi = false;
+        return;
+    } else if (have_escape && ch == '[') {
+        have_csi = true;
+        return;
+    }
+
+    if (have_csi) {
+        // just ignore them
+        if (ch >= 'A' && ch <= 'Z') {
+            if (ch == 'K') // CLEAR_EOL
+                memset(&output[output_pos], 0, sizeof(output) - output_pos);
+            have_csi = false;
+        }
+    } else {
+        if (ch == '\b') {
+            output_pos = output_pos > 0 ? output_pos - 1 : 0;
+        } else if (ch == '\n') {
+            output_pos = 0;
+            memset(output, 0, sizeof(output));
+        } else {
+            output[output_pos++] = ch;
+            // output[output_pos] = '\0';
+        }
+    }
+}
+
+#define UP_ARROW "\x1b[A"
+#define DOWN_ARROW "\x1b[B"
+
+static void test_up_down(void)
+{
+    struct embedded_cli cli;
+    embedded_cli_init(&cli, "prompt> ", output_putchar, NULL);
+    embedded_cli_prompt(&cli);
+    TEST_ASSERT(strcmp(output, "prompt> ") == 0);
+    test_insert_line(&cli, "cmd 1\n");
+    test_insert_line(&cli, "cmd 2\n");
+    test_insert_line(&cli, "cmd 3\n");
+    test_insert_line(&cli, "cmd 4\n");
+    embedded_cli_prompt(&cli);
+    test_insert_line(&cli, UP_ARROW);
+    TEST_ASSERT(strcmp(output, "prompt> cmd 4") == 0);
+    test_insert_line(&cli, UP_ARROW);
+    TEST_ASSERT(strcmp(output, "prompt> cmd 3") == 0);
+    test_insert_line(&cli, DOWN_ARROW);
+    test_insert_line(&cli, DOWN_ARROW);
+    TEST_ASSERT(strcmp(output, "prompt> ") == 0);
+}
 #endif
 
 /**
@@ -246,6 +309,7 @@ TEST_LIST = {
     {"history", test_history},
     {"history_keys", test_history_keys},
     {"search", test_search},
+    {"up_down", test_up_down},
 #endif
     {"multiple", test_multiple},
     {"echo", test_echo},
