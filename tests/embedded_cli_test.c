@@ -254,10 +254,10 @@ static void test_quotes(void)
     struct embedded_cli cli;
     char **argv;
     embedded_cli_init(&cli, NULL, NULL, NULL);
-    test_insert_line(&cli, "this 'is some' \"text with\" '\"quotes\"' "
+    test_insert_line(&cli, "\\'this 'is some' \"text with\" '\"quotes\"' "
                            "'concat'enated \\\"escape\\\" \n");
     TEST_ASSERT(embedded_cli_argc(&cli, &argv) == 6);
-    TEST_ASSERT(strcmp(argv[0], "this") == 0);
+    TEST_ASSERT(strcmp(argv[0], "'this") == 0);
     TEST_ASSERT(strcmp(argv[1], "is some") == 0);
     TEST_ASSERT(strcmp(argv[2], "text with") == 0);
     TEST_ASSERT(strcmp(argv[3], "\"quotes\"") == 0);
@@ -276,7 +276,7 @@ static void test_too_many_args(void)
     TEST_ASSERT(strcmp(argv[1], "b") == 0);
     TEST_ASSERT(strcmp(argv[13], "n") == 0);
     TEST_ASSERT(strcmp(argv[14], "o") == 0);
-    TEST_ASSERT(argv[15] == NULL);
+    TEST_ASSERT(argv[EMBEDDED_CLI_MAX_ARGC - 1] == NULL);
 }
 
 static void test_max_chars(void)

@@ -19,7 +19,7 @@ embedded_cli_test: embedded_cli.o tests/embedded_cli_test.o
 	$(CC) -o $@ $^
 
 embedded_cli_fuzzer: embedded_cli.c tests/embedded_cli_fuzzer.c
-	$(CLANG) -Itests -I. -g -o $@ tests/embedded_cli_fuzzer.c -fsanitize=fuzzer,address
+	$(CLANG) -Itests -I. -g -O1 -o $@ tests/embedded_cli_fuzzer.c -fsanitize=fuzzer,address,undefined,integer
 
 %.o: %.c
 	# cppcheck --quiet --std=c99 --enable=warning,style,performance,portability,information  -I. -DTEST_FINI= $<

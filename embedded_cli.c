@@ -425,12 +425,11 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
     char in_string = '\0';
     if (!cli->done)
         return 0;
-    for (size_t i = 0; i < sizeof(cli->buffer) && cli->buffer[i] != '\0';
-         i++) {
-
+    for (size_t i = 0; i < sizeof(cli->buffer) && cli->buffer[i] != '\0';) {
         // If we're escaping this character, just absorb it regardless
         if (in_escape) {
             in_escape = false;
+            i++;
             continue;
         }
 
@@ -440,7 +439,8 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
                 memmove(&cli->buffer[i], &cli->buffer[i + 1],
                         sizeof(cli->buffer) - i - 1);
                 in_string = '\0';
-                i--;
+            } else {
+                i++;
             }
             continue;
         }
@@ -451,6 +451,7 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
             if (in_arg)
                 cli->buffer[i] = '\0';
             in_arg = false;
+            i++;
             continue;
         }
 
@@ -467,17 +468,16 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
             // Absorb the escape character
             memmove(&cli->buffer[i], &cli->buffer[i + 1],
                     sizeof(cli->buffer) - i - 1);
-            i--;
             in_escape = true;
-        }
-
-        // If we're starting a new string, absorb the character and shuffle
-        // things back
-        if (cli->buffer[i] == '\'' || cli->buffer[i] == '"') {
+        } else if (cli->buffer[i] == '\'' || cli->buffer[i] == '"') {
+            // If we're starting a new string, absorb the character and
+            // shuffle things back
             in_string = cli->buffer[i];
             memmove(&cli->buffer[i], &cli->buffer[i + 1],
                     sizeof(cli->buffer) - i - 1);
-            i--;
+        } else {
+            // Just move to the next character
+            i++;
         }
     }
     // Traditionally, there is a NULL entry at argv[argc].
