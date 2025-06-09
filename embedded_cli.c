@@ -162,7 +162,7 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
 #if EMBEDDED_CLI_HISTORY_LEN
 static void embedded_cli_extend_history(struct embedded_cli *cli)
 {
-    int len = strlen(cli->buffer);
+    size_t len = strlen(cli->buffer);
     if (len > 0) {
         // If the new entry is the same as the most recent history entry,
         // then don't insert it
@@ -456,7 +456,7 @@ int embedded_cli_argc(struct embedded_cli *cli, char ***argv)
         }
 
         if (!in_arg) {
-            if (pos >= EMBEDDED_CLI_MAX_ARGC) {
+            if (pos >= EMBEDDED_CLI_MAX_ARGC - 1) {
                 break;
             }
             cli->argv[pos] = &cli->buffer[i];
