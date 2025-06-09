@@ -163,9 +163,6 @@ static void output_putchar(void *data, char ch, bool is_last)
     }
 }
 
-#define UP_ARROW "\x1b[A"
-#define DOWN_ARROW "\x1b[B"
-
 static void test_up_down(void)
 {
     struct embedded_cli cli;
@@ -177,12 +174,12 @@ static void test_up_down(void)
     test_insert_line(&cli, "cmd 3\n");
     test_insert_line(&cli, "cmd 4\n");
     embedded_cli_prompt(&cli);
-    test_insert_line(&cli, UP_ARROW);
+    test_insert_line(&cli, UP);
     TEST_ASSERT(strcmp(output, "prompt> cmd 4") == 0);
-    test_insert_line(&cli, UP_ARROW);
+    test_insert_line(&cli, UP);
     TEST_ASSERT(strcmp(output, "prompt> cmd 3") == 0);
-    test_insert_line(&cli, DOWN_ARROW);
-    test_insert_line(&cli, DOWN_ARROW);
+    test_insert_line(&cli, DOWN);
+    test_insert_line(&cli, DOWN);
     TEST_ASSERT(strcmp(output, "prompt> ") == 0);
 }
 #endif
