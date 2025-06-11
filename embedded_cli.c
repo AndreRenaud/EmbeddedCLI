@@ -372,6 +372,18 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             cli->have_escape = true;
             cli->counter = 0;
             break;
+        case '\x15': // Ctrl-U
+            // move back data after cursor, including last \0
+            memmove(cli->buffer, cli->buffer + cli->cursor, cli->len - cli->cursor + 1);
+            cli->len = cli->len - cli->cursor;
+            // clear from beggining of buffer,
+            // print buffer again and move back to start
+            term_cursor_back(cli, cli->cursor);
+            cli_puts(cli, CLEAR_EOL);
+            cli_puts(cli, cli->buffer);
+            term_cursor_back(cli, cli->len);
+            cli->cursor = 0;
+            break;
         case '[':
             if (cli->have_escape)
                 cli->have_csi = true;

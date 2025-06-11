@@ -17,6 +17,7 @@
 #define CTRL_K "\x0b"
 #define CTRL_L "\x0c"
 #define CTRL_R "\x12"
+#define CTRL_U "\x15"
 
 static void cli_equals(const struct embedded_cli *cli, const char *line)
 {
@@ -210,6 +211,8 @@ static void test_multiple(void)
         {"abc" HOME DELETE DELETE "\n", "c"},
         {"abc" LEFT LEFT CTRL_K "\n", "a"},
         {"abc" LEFT LEFT CTRL_L "\n", "abc"},
+        {"abc" CTRL_U "\n", ""},
+        {"abc" LEFT LEFT CTRL_U "\n", "bc"},
         {NULL, NULL},
     };
 
