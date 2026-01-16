@@ -60,7 +60,7 @@ void embedded_cli_init(struct embedded_cli *cli, const char *prompt,
 
 static void cli_ansi(struct embedded_cli *cli, int n, char code)
 {
-    char buffer[5] = {'\x1b', '[', '0' + (n % 10), code, '\0'};
+    char buffer[5] = {'\x1b', '[', (char) ('0' + (n % 10)), code, '\0'};
     cli_puts(cli, buffer);
 }
 
@@ -111,7 +111,7 @@ static void embedded_cli_insert_default_char(struct embedded_cli *cli,
         return;
     // Insert a gap in the buffer for the new character
     memmove(&cli->buffer[cli->cursor + 1], &cli->buffer[cli->cursor],
-            cli->len - cli->cursor);
+            (size_t) (cli->len - cli->cursor));
     cli->buffer[cli->cursor] = ch;
     cli->len++;
     cli->buffer[cli->len] = '\0';
@@ -143,7 +143,7 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
 
     // Search back through the history buffer for `history_pos` entry
     for (int i = 0; i < history_pos; i++) {
-        int len = strlen(&cli->history[pos]);
+        int len = (int) strlen(&cli->history[pos]);
         if (len == 0)
             return NULL;
         pos += len + 1;
@@ -184,7 +184,7 @@ static void embedded_cli_stop_search(struct embedded_cli *cli, bool print)
         cli->buffer[sizeof(cli->buffer) - 1] = '\0';
     } else
         cli->buffer[0] = '\0';
-    cli->len = cli->cursor = strlen(cli->buffer);
+    cli->len = cli->cursor = (int) strlen(cli->buffer);
     cli->searching = false;
     if (print) {
         cli_puts(cli, MOVE_BOL CLEAR_EOL);
@@ -218,7 +218,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos + 1);
                 if (line) {
-                    int len = strlen(line);
+                    int len = (int) strlen(line);
                     cli->history_pos++;
                     // printf("history up %d = '%s'\n", cli->history_pos,
                     // line);
@@ -246,7 +246,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos - 1);
                 if (line) {
-                    int len = strlen(line);
+                    int len = (int) strlen(line);
                     cli->history_pos--;
                     // printf("history down %d = '%s'\n",
                     // cli->history_pos, line);
@@ -291,7 +291,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                     if (cli->cursor < cli->len) {
                         memmove(&cli->buffer[cli->cursor],
                                 &cli->buffer[cli->cursor + 1],
-                                cli->len - cli->cursor);
+                                (size_t) (cli->len - cli->cursor));
                         cli->len--;
                         cli_puts(cli, &cli->buffer[cli->cursor]);
                         cli_puts(cli, " ");
@@ -346,7 +346,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             if (cli->cursor > 0) {
                 memmove(&cli->buffer[cli->cursor - 1],
                         &cli->buffer[cli->cursor],
-                        cli->len - cli->cursor + 1);
+                        (size_t) (cli->len - cli->cursor + 1));
                 cli->cursor--;
                 cli->len--;
                 term_cursor_back(cli, 1);
@@ -374,7 +374,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             break;
         case '\x15': // Ctrl-U
             // move back data after cursor, including last \0
-            memmove(cli->buffer, cli->buffer + cli->cursor, cli->len - cli->cursor + 1);
+            memmove(cli->buffer, cli->buffer + cli->cursor, (size_t) (cli->len - cli->cursor + 1));
             cli->len = cli->len - cli->cursor;
             // clear from beggining of buffer,
             // print buffer again and move back to start
