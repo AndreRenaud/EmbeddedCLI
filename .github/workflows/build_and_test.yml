@@ -21,3 +21,5 @@ jobs:
         run: |
           make clean
           make CFLAGS="-DEMBEDDED_CLI_HISTORY_LEN=0 -I." test
+      - name: Check code format
+        run: make format-check

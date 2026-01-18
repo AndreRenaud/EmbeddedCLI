@@ -374,7 +374,8 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             break;
         case '\x15': // Ctrl-U
             // move back data after cursor, including last \0
-            memmove(cli->buffer, cli->buffer + cli->cursor, cli->len - cli->cursor + 1);
+            memmove(cli->buffer, cli->buffer + cli->cursor,
+                    cli->len - cli->cursor + 1);
             cli->len = cli->len - cli->cursor;
             // clear from beggining of buffer,
             // print buffer again and move back to start
