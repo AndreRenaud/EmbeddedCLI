@@ -1,4 +1,5 @@
-CFLAGS=-g -Wall -Wextra -Werror -pipe -I. --std=c99
+CFLAGS=-g -Wall -Wextra -Wimplicit -Wconversion -pipe -I. --std=c99
+# todo add -Werror again
 CLANG_FORMAT=clang-format
 CLANG?=clang
 
