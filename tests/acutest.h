@@ -893,7 +893,7 @@ acutest_remember_(int i)
 static void
 acutest_set_success_(int i, int success)
 {
-    acutest_test_data_[i].flags |= success ? ACUTEST_FLAG_SUCCESS_ : ACUTEST_FLAG_FAILURE_;
+    acutest_test_data_[i].flags = (unsigned char) (acutest_test_data_[i].flags | (success ? ACUTEST_FLAG_SUCCESS_ : ACUTEST_FLAG_FAILURE_));
 }
 
 static void
@@ -1617,8 +1617,8 @@ acutest_is_tracer_present_(void)
         }
 
         if(n_read == sizeof(buf)-1) {
-            memmove(buf, buf + sizeof(buf)-1 - OVERLAP, OVERLAP);
-            n_read = OVERLAP;
+            memmove(buf, buf + sizeof(buf)-1 - OVERLAP, (size_t) OVERLAP);
+            n_read = (size_t) OVERLAP;
         } else {
             break;
         }
