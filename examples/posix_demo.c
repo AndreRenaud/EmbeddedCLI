@@ -30,11 +30,11 @@ static char getch(void)
 
     // Do what cfmakeraw does (Using --std=c99 means that cfmakeraw isn't
     // available)
-    raw.c_iflag &=
-        (tcflag_t)~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    raw.c_iflag &= (tcflag_t) ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR |
+                                IGNCR | ICRNL | IXON);
     raw.c_oflag &= (tcflag_t)~OPOST;
-    raw.c_lflag &= (tcflag_t)~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-    raw.c_cflag &= (tcflag_t)~(CSIZE | PARENB);
+    raw.c_lflag &= (tcflag_t) ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    raw.c_cflag &= (tcflag_t) ~(CSIZE | PARENB);
     raw.c_cflag |= CS8;
 
     raw.c_cc[VMIN] = 1;

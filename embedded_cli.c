@@ -60,7 +60,7 @@ void embedded_cli_init(struct embedded_cli *cli, const char *prompt,
 
 static void cli_ansi(struct embedded_cli *cli, size_t n, char code)
 {
-    char buffer[5] = {'\x1b', '[', (char) ('0' + (n % 10)), code, '\0'};
+    char buffer[5] = {'\x1b', '[', (char)('0' + (n % 10)), code, '\0'};
     cli_puts(cli, buffer);
 }
 
@@ -143,7 +143,7 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
 
     // Search back through the history buffer for `history_pos` entry
     for (int i = 0; i < history_pos; i++) {
-        int len = (int) strlen(&cli->history[pos]);
+        int len = (int)strlen(&cli->history[pos]);
         if (len == 0)
             return NULL;
         pos += len + 1;
@@ -205,7 +205,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
     // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
     if (cli->have_csi) {
         if (ch >= '0' && ch <= '9' && cli->counter < 100) {
-            cli->counter = (cli->counter * 10) + (size_t) (ch - '0');
+            cli->counter = (cli->counter * 10) + (size_t)(ch - '0');
             // printf("cli->counter -> %d\n", cli->counter);
         } else {
             if (cli->counter == 0)
