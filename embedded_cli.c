@@ -266,7 +266,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             }
 
             case 'C':
-                if (cli->cursor <= cli->len - cli->counter) {
+                if (cli->cursor + cli->counter <= cli->len) {
                     cli->cursor += cli->counter;
                     term_cursor_fwd(cli, cli->counter);
                 }
