@@ -74,12 +74,12 @@ struct embedded_cli {
     /**
      * Number of characters in buffer at the moment
      */
-    int len;
+    size_t len;
 
     /**
      * Position of the cursor
      */
-    int cursor;
+    size_t cursor;
 
     /**
      * Have we just parsed a full line?
@@ -104,7 +104,7 @@ struct embedded_cli {
     /**
      * counter of the value for the CSI code
      */
-    int counter;
+    size_t counter;
 
     char *argv[EMBEDDED_CLI_MAX_ARGC];
 
