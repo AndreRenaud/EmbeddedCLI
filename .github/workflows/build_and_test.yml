@@ -1,13 +1,13 @@
 name: Build and Test
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - name: Build & Test
         run: make test
       - name: Fuzz
@@ -21,3 +21,5 @@ jobs:
         run: |
           make clean
           make CFLAGS="-DEMBEDDED_CLI_HISTORY_LEN=0 -I." test
+      - name: Check code format
+        run: make format-check

@@ -148,7 +148,8 @@ static void output_putchar(void *data, char ch, bool is_last)
         // just ignore them
         if (ch >= 'A' && ch <= 'Z') {
             if (ch == 'K') // CLEAR_EOL
-                memset(&output[output_pos], 0, sizeof(output) - (size_t)output_pos);
+                memset(&output[output_pos], 0,
+                       sizeof(output) - (size_t)output_pos);
             have_csi = false;
         }
     } else {
