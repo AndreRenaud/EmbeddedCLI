@@ -148,7 +148,7 @@ static void output_putchar(void *data, char ch, bool is_last)
         // just ignore them
         if (ch >= 'A' && ch <= 'Z') {
             if (ch == 'K') // CLEAR_EOL
-                memset(&output[output_pos], 0, sizeof(output) - output_pos);
+                memset(&output[output_pos], 0, sizeof(output) - (size_t)output_pos);
             have_csi = false;
         }
     } else {
@@ -231,7 +231,7 @@ static void callback(void *data, char ch, bool is_last)
     (void)is_last;
     char *d = (char *)data;
     if (d) {
-        int len = strlen(d);
+        size_t len = strlen(d);
         if (len < MAX_OUTPUT_LEN - 1) {
             d[len] = ch;
             d[len + 1] = '\0';

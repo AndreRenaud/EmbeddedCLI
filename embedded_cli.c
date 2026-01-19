@@ -58,32 +58,32 @@ void embedded_cli_init(struct embedded_cli *cli, const char *prompt,
     embedded_cli_reset_line(cli);
 }
 
-static void cli_ansi(struct embedded_cli *cli, int n, char code)
+static void cli_ansi(struct embedded_cli *cli, size_t n, char code)
 {
-    char buffer[5] = {'\x1b', '[', '0' + (n % 10), code, '\0'};
+    char buffer[5] = {'\x1b', '[', (char) ('0' + (n % 10)), code, '\0'};
     cli_puts(cli, buffer);
 }
 
-static void term_cursor_back(struct embedded_cli *cli, int n)
+static void term_cursor_back(struct embedded_cli *cli, size_t n)
 {
     while (n > 0) {
-        int count = n > 9 ? 9 : n;
+        size_t count = n > 9 ? 9 : n;
         cli_ansi(cli, count, 'D');
         n -= count;
     }
 }
 
-static void term_cursor_fwd(struct embedded_cli *cli, int n)
+static void term_cursor_fwd(struct embedded_cli *cli, size_t n)
 {
     while (n > 0) {
-        int count = n > 9 ? 9 : n;
+        size_t count = n > 9 ? 9 : n;
         cli_ansi(cli, count, 'C');
         n -= count;
     }
 }
 
 #if EMBEDDED_CLI_HISTORY_LEN
-static void term_backspace(struct embedded_cli *cli, int n)
+static void term_backspace(struct embedded_cli *cli, size_t n)
 {
     // printf("backspace %d ('%s': %d)\n", n, cli->buffer, cli->done);
     while (n--)
@@ -143,7 +143,7 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
 
     // Search back through the history buffer for `history_pos` entry
     for (int i = 0; i < history_pos; i++) {
-        int len = strlen(&cli->history[pos]);
+        int len = (int) strlen(&cli->history[pos]);
         if (len == 0)
             return NULL;
         pos += len + 1;
@@ -205,7 +205,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
     // printf("Inserting char %d 0x%x '%c'\n", ch, ch, ch);
     if (cli->have_csi) {
         if (ch >= '0' && ch <= '9' && cli->counter < 100) {
-            cli->counter = cli->counter * 10 + ch - '0';
+            cli->counter = (cli->counter * 10) + (size_t) (ch - '0');
             // printf("cli->counter -> %d\n", cli->counter);
         } else {
             if (cli->counter == 0)
@@ -218,7 +218,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos + 1);
                 if (line) {
-                    int len = strlen(line);
+                    size_t len = strlen(line);
                     cli->history_pos++;
                     // printf("history up %d = '%s'\n", cli->history_pos,
                     // line);
@@ -246,7 +246,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
                 const char *line =
                     embedded_cli_get_history(cli, cli->history_pos - 1);
                 if (line) {
-                    int len = strlen(line);
+                    size_t len = strlen(line);
                     cli->history_pos--;
                     // printf("history down %d = '%s'\n",
                     // cli->history_pos, line);
