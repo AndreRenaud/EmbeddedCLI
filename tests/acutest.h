@@ -1714,7 +1714,7 @@ acutest_under_debugger_(void)
     /* Scan /proc/self/status for line "TracerPid: [PID]". If such line exists
      * and the PID is non-zero, we're being debugged. */
     {
-        static const int OVERLAP = 32;
+        static const size_t OVERLAP = 32;
         int fd;
         char buf[512];
         size_t n_read;
