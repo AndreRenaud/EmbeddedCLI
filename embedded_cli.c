@@ -85,9 +85,8 @@ static void term_cursor_fwd(struct embedded_cli *cli, size_t n)
 #if EMBEDDED_CLI_HISTORY_LEN
 static void term_backspace(struct embedded_cli *cli, size_t n)
 {
-    // printf("backspace %d ('%s': %d)\n", n, cli->buffer, cli->done);
-    while (n--)
-        cli_putchar(cli, '\b', n == 0);
+    for (; n > 0; n--)
+        cli_putchar(cli, '\b', n == 1);
 }
 
 static const char *embedded_cli_get_history_search(struct embedded_cli *cli)
