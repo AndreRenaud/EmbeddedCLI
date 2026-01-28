@@ -4,7 +4,7 @@
 
 Embedded CLI is a library for providing usable command line interfaces for embedded systems. It supports history and command line editing. It is designed to use no dynamic memory, and provide an easy to integrate API.
 
-[![GitHub Actions](https://github.com/AndreRenaud/EmbeddedCLI/workflows/Build%20and%20Test/badge.svg)](https://github.com/AndreRenaud/EmbeddedCLI/actions)
+[![GitHub Actions](https://github.com/AndreRenaud/EmbeddedCLI/workflows/Build%20and%20Test/badge.svg?branch=main)](https://github.com/AndreRenaud/EmbeddedCLI/actions)
 
 [![License: BSD 0-Clause](https://img.shields.io/badge/License-BSD%200--Clause-blue.svg)](LICENSE)
 
