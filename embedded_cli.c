@@ -4,7 +4,6 @@
  *    https://en.wikipedia.org/wiki/ANSI_escape_code
  */
 
-#include <stdio.h>
 #include <string.h>
 
 #include "embedded_cli.h"
