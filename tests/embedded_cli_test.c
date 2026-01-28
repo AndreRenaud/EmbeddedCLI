@@ -18,6 +18,7 @@
 #define CTRL_L "\x0c"
 #define CTRL_R "\x12"
 #define CTRL_U "\x15"
+#define CTRL_X "\x18"
 
 static void cli_equals(const struct embedded_cli *cli, const char *line)
 {
@@ -214,6 +215,8 @@ static void test_multiple(void)
         {"abc" LEFT LEFT CTRL_L "\n", "abc"},
         {"abc" CTRL_U "\n", ""},
         {"abc" LEFT LEFT CTRL_U "\n", "bc"},
+        // The check below ensures we ignore unknown control sequences
+        {CTRL_X " " CTRL_X " " CTRL_X "\n", "  "},
         {NULL, NULL},
     };
 
@@ -300,22 +303,36 @@ static void test_max_chars(void)
     TEST_ASSERT(cli.buffer[sizeof(cli.buffer) - 2] == 'f');
 }
 
-TEST_LIST = {
-    {"simple", test_simple},
-    {"argc", test_argc},
-    {"delete", test_delete},
-    {"cursor_left", test_cursor_left},
-    {"cursor_right", test_cursor_right},
+static void test_utf8(void)
+{
+    struct embedded_cli cli;
+    char **argv;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "normal ñ ü 中文 text\n");
+    int argc = embedded_cli_argc(&cli, &argv);
+    TEST_ASSERT(argc == 5);
+    TEST_ASSERT(strcmp(argv[0], "normal") == 0);
+    TEST_ASSERT(strcmp(argv[1], "ñ") == 0);
+    TEST_ASSERT(strcmp(argv[2], "ü") == 0);
+    TEST_ASSERT(strcmp(argv[3], "中文") == 0);
+    TEST_ASSERT(strcmp(argv[4], "text") == 0);
+}
+
+TEST_LIST = {{"simple", test_simple},
+             {"argc", test_argc},
+             {"delete", test_delete},
+             {"cursor_left", test_cursor_left},
+             {"cursor_right", test_cursor_right},
 #if EMBEDDED_CLI_HISTORY_LEN
-    {"history", test_history},
-    {"history_keys", test_history_keys},
-    {"search", test_search},
-    {"up_down", test_up_down},
+             {"history", test_history},
+             {"history_keys", test_history_keys},
+             {"search", test_search},
+             {"up_down", test_up_down},
 #endif
-    {"multiple", test_multiple},
-    {"echo", test_echo},
-    {"quotes", test_quotes},
-    {"too_many_args", test_too_many_args},
-    {"max_chars", test_max_chars},
-    {NULL, NULL},
-};
+             {"multiple", test_multiple},
+             {"echo", test_echo},
+             {"quotes", test_quotes},
+             {"too_many_args", test_too_many_args},
+             {"max_chars", test_max_chars},
+             {"utf8", test_utf8},
+             {NULL, NULL}};

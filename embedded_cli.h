@@ -133,7 +133,7 @@ const char *embedded_cli_get_line(const struct embedded_cli *cli);
 
 /**
  * Parses the internal buffer and returns it as an argc/argc combo
- * @return number of values in argv (maximum of EMBEDDED_CLI_MAX_ARGC)
+ * @return number of values in argv (maximum of EMBEDDED_CLI_MAX_ARGC - 1)
  */
 int embedded_cli_argc(struct embedded_cli *cli, char ***argv);
 
