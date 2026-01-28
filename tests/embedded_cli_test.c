@@ -312,6 +312,7 @@ static void test_utf8(void)
     TEST_ASSERT(strcmp(argv[1], "ñ") == 0);
     TEST_ASSERT(strcmp(argv[2], "ü") == 0);
     TEST_ASSERT(strcmp(argv[3], "中文") == 0);
+    TEST_ASSERT(strcmp(argv[4], "text") == 0);
 }
 
 TEST_LIST = {
