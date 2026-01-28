@@ -18,6 +18,7 @@
 #define CTRL_L "\x0c"
 #define CTRL_R "\x12"
 #define CTRL_U "\x15"
+#define CTRL_X "\x18"
 
 static void cli_equals(const struct embedded_cli *cli, const char *line)
 {
@@ -214,6 +215,8 @@ static void test_multiple(void)
         {"abc" LEFT LEFT CTRL_L "\n", "abc"},
         {"abc" CTRL_U "\n", ""},
         {"abc" LEFT LEFT CTRL_U "\n", "bc"},
+        // The check below ensures we ignore unknown control sequences
+        {CTRL_X " " CTRL_X " " CTRL_X "\n", "  "},
         {NULL, NULL},
     };
 

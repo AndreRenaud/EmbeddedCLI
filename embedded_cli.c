@@ -146,9 +146,12 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
         if (len == 0)
             return NULL;
         pos += len + 1;
-        if (pos == sizeof(cli->history))
+        if (pos >= sizeof(cli->history))
             return NULL;
     }
+
+    if (cli->history[pos] == '\0')
+        return NULL;
 
     return &cli->history[pos];
 #else
@@ -168,7 +171,7 @@ static void embedded_cli_extend_history(struct embedded_cli *cli)
         if (strcmp(cli->buffer, cli->history) == 0)
             return;
         memmove(&cli->history[len + 1], &cli->history[0],
-                sizeof(cli->history) - len + 1);
+                sizeof(cli->history) - (len + 1));
         memcpy(cli->history, cli->buffer, len + 1);
         // Make sure it's always nul terminated
         cli->history[sizeof(cli->history) - 1] = '\0';
