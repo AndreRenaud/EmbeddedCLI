@@ -2,6 +2,7 @@
 #define EMBEDDED_CLI
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifndef EMBEDDED_CLI_MAX_LINE
 /**
