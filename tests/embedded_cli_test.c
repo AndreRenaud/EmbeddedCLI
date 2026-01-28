@@ -315,23 +315,21 @@ static void test_utf8(void)
     TEST_ASSERT(strcmp(argv[4], "text") == 0);
 }
 
-TEST_LIST = {
-    {"simple", test_simple},
-    {"argc", test_argc},
-    {"delete", test_delete},
-    {"cursor_left", test_cursor_left},
-    {"cursor_right", test_cursor_right},
+TEST_LIST = {{"simple", test_simple},
+             {"argc", test_argc},
+             {"delete", test_delete},
+             {"cursor_left", test_cursor_left},
+             {"cursor_right", test_cursor_right},
 #if EMBEDDED_CLI_HISTORY_LEN
-    {"history", test_history},
-    {"history_keys", test_history_keys},
-    {"search", test_search},
-    {"up_down", test_up_down},
+             {"history", test_history},
+             {"history_keys", test_history_keys},
+             {"search", test_search},
+             {"up_down", test_up_down},
 #endif
-    {"multiple", test_multiple},
-    {"echo", test_echo},
-    {"quotes", test_quotes},
-    {"too_many_args", test_too_many_args},
-    {"max_chars", test_max_chars},
-    {"utf8", test_utf8},
-    {NULL, NULL}
-};
+             {"multiple", test_multiple},
+             {"echo", test_echo},
+             {"quotes", test_quotes},
+             {"too_many_args", test_too_many_args},
+             {"max_chars", test_max_chars},
+             {"utf8", test_utf8},
+             {NULL, NULL}};
