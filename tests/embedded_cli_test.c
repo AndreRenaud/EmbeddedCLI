@@ -300,6 +300,20 @@ static void test_max_chars(void)
     TEST_ASSERT(cli.buffer[sizeof(cli.buffer) - 2] == 'f');
 }
 
+static void test_utf8(void)
+{
+    struct embedded_cli cli;
+    char **argv;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "normal ñ ü 中文 text\n");
+    int argc = embedded_cli_argc(&cli, &argv);
+    TEST_ASSERT(argc == 5);
+    TEST_ASSERT(strcmp(argv[0], "normal") == 0);
+    TEST_ASSERT(strcmp(argv[1], "ñ") == 0);
+    TEST_ASSERT(strcmp(argv[2], "ü") == 0);
+    TEST_ASSERT(strcmp(argv[3], "中文") == 0);
+}
+
 TEST_LIST = {
     {"simple", test_simple},
     {"argc", test_argc},
@@ -317,5 +331,6 @@ TEST_LIST = {
     {"quotes", test_quotes},
     {"too_many_args", test_too_many_args},
     {"max_chars", test_max_chars},
-    {NULL, NULL},
+    {"utf8", test_utf8},
+    {NULL, NULL}
 };

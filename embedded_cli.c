@@ -399,7 +399,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             cli_putchar(cli, '\n', true);
             break;
         default:
-            if (ch > 0)
+            if (ch < 0 || ch >= 32)
                 embedded_cli_insert_default_char(cli, ch);
         }
     }

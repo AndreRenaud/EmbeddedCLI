@@ -95,7 +95,7 @@ int main(void)
             cli_argc = embedded_cli_argc(&cli, &cli_argv);
             printf("Got %d args\n", cli_argc);
             for (int i = 0; i < cli_argc; i++) {
-                printf("Arg %d/%d: '%s'\n", i, cli_argc, cli_argv[i]);
+                printf("Arg %d/%d: [%lu bytes] '%s'\n", i, cli_argc, strlen(cli_argv[i]), cli_argv[i]);
             }
             done = cli_argc >= 1 && (strcmp(cli_argv[0], "quit") == 0);
 
