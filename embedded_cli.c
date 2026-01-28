@@ -136,14 +136,14 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
                                      int history_pos)
 {
 #if EMBEDDED_CLI_HISTORY_LEN
-    int pos = 0;
+    size_t pos = 0;
 
     if (history_pos < 0)
         return NULL;
 
     // Search back through the history buffer for `history_pos` entry
     for (int i = 0; i < history_pos; i++) {
-        int len = (int)strlen(&cli->history[pos]);
+        size_t len = strlen(&cli->history[pos]);
         if (len == 0)
             return NULL;
         pos += len + 1;
