@@ -114,6 +114,51 @@ static void test_history_keys(void)
     cli_equals(&cli, "Second");
 }
 
+static void test_history_wrap(void)
+{
+    struct embedded_cli cli;
+    char line[20];
+    const char *h;
+    int i;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    // Insert enough 10 character lines to overflow the history buffer, so
+    // that the oldest retained entry would be cut off part way through
+    for (i = 0; i < EMBEDDED_CLI_HISTORY_LEN / 10; i++) {
+        snprintf(line, sizeof(line), "cmd-%06d\n", i);
+        test_insert_line(&cli, line);
+    }
+    // Every entry returned must be complete, never a truncated fragment
+    for (i = 0; (h = embedded_cli_get_history(&cli, i)) != NULL; i++) {
+        snprintf(line, sizeof(line), "cmd-%06d",
+                 EMBEDDED_CLI_HISTORY_LEN / 10 - 1 - i);
+        TEST_ASSERT_(strcmp(h, line) == 0,
+                     "History %d: expected '%s' got '%s'", i, line, h);
+    }
+    TEST_CHECK(i == EMBEDDED_CLI_HISTORY_LEN / 11);
+}
+
+static void test_history_long_line(void)
+{
+    struct embedded_cli cli;
+    char line[EMBEDDED_CLI_MAX_LINE];
+    const char *h;
+    embedded_cli_init(&cli, NULL, NULL, NULL);
+    test_insert_line(&cli, "short\n");
+    // Enter the longest possible line
+    memset(line, 'x', sizeof(line) - 1);
+    line[sizeof(line) - 1] = '\0';
+    test_insert_line(&cli, line);
+    test_insert_line(&cli, "\n");
+    cli_equals(&cli, line);
+    h = embedded_cli_get_history(&cli, 0);
+    if (sizeof(line) <= EMBEDDED_CLI_HISTORY_LEN) {
+        TEST_ASSERT(h && strcmp(h, line) == 0);
+    } else {
+        // Too long to fit in the history, so it must not be recorded
+        TEST_ASSERT(h && strcmp(h, "short") == 0);
+    }
+}
+
 static void test_search(void)
 {
     struct embedded_cli cli;
@@ -217,6 +262,10 @@ static void test_multiple(void)
         {"abc" LEFT LEFT CTRL_U "\n", "bc"},
         // The check below ensures we ignore unknown control sequences
         {CTRL_X " " CTRL_X " " CTRL_X "\n", "  "},
+        // A lone escape must not cause a later '[' to start a CSI sequence
+        {"\x1b"
+         "a[1]\n",
+         "a[1]"},
         {NULL, NULL},
     };
 
@@ -326,6 +375,8 @@ TEST_LIST = {{"simple", test_simple},
 #if EMBEDDED_CLI_HISTORY_LEN
              {"history", test_history},
              {"history_keys", test_history_keys},
+             {"history_wrap", test_history_wrap},
+             {"history_long_line", test_history_long_line},
              {"search", test_search},
              {"up_down", test_up_down},
 #endif

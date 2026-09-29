@@ -21,5 +21,9 @@ jobs:
         run: |
           make clean
           make CFLAGS="-DEMBEDDED_CLI_HISTORY_LEN=0 -I." test
+      - name: Test history smaller than a line
+        run: |
+          make clean
+          make CFLAGS="-DEMBEDDED_CLI_HISTORY_LEN=64 -I." test
       - name: Check code format
         run: make format-check
