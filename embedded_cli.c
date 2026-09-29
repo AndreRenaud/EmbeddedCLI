@@ -164,7 +164,8 @@ const char *embedded_cli_get_history(struct embedded_cli *cli,
 static void embedded_cli_extend_history(struct embedded_cli *cli)
 {
     size_t len = strlen(cli->buffer);
-    if (len > 0) {
+    // Lines which are too long to fit in the history are not retained
+    if (len > 0 && len < sizeof(cli->history)) {
         // If the new entry is the same as the most recent history entry,
         // then don't insert it
         if (strcmp(cli->buffer, cli->history) == 0)
@@ -172,8 +173,11 @@ static void embedded_cli_extend_history(struct embedded_cli *cli)
         memmove(&cli->history[len + 1], &cli->history[0],
                 sizeof(cli->history) - (len + 1));
         memcpy(cli->history, cli->buffer, len + 1);
-        // Make sure it's always nul terminated
-        cli->history[sizeof(cli->history) - 1] = '\0';
+        // Blank out the oldest entry if it was only partially retained, so
+        // it is never returned. This also keeps the history nul terminated
+        for (size_t i = sizeof(cli->history) - 1;
+             i > len && cli->history[i] != '\0'; i--)
+            cli->history[i] = '\0';
     }
 }
 
@@ -308,6 +312,9 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             cli->counter = 0;
         }
     } else {
+        // An escape only starts a CSI sequence if immediately followed by '['
+        bool have_escape = cli->have_escape;
+        cli->have_escape = false;
         switch (ch) {
         case '\0':
             break;
@@ -387,7 +394,7 @@ bool embedded_cli_insert_char(struct embedded_cli *cli, char ch)
             cli->cursor = 0;
             break;
         case '[':
-            if (cli->have_escape)
+            if (have_escape)
                 cli->have_csi = true;
             else
                 embedded_cli_insert_default_char(cli, ch);
